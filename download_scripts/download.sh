@@ -4,7 +4,7 @@ mkdir logs; download.sh &> logs/download.log
 
 module load sra-tools  
 
-META=../meta_soil_blj.txt
+META=SraAccList.txt
 COL=1
 
 NUM=$( < $META wc -l)
