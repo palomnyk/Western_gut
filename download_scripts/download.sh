@@ -1,6 +1,6 @@
 
 #!/bin/bash
-mkdir logs; download.sh &> logs/download.log
+#mkdir logs; download.sh &> logs/download.log
 
 module load sra-tools  
 
@@ -11,10 +11,10 @@ NUM=$( < $META wc -l)
 echo "Table $META has $NUM rows including the hearder."
 echo "Taking SRA accession id's from column: $COL."
 
-echo "First row:"
-head -n 2 $META
+# echo "First row:"
+# head -n 2 $META
 
-for i in $(seq 2 $NUM)
+for i in $(seq 1 $NUM)
 do
     echo "$i of $NUM"
     SRR=$(sed -ne "${i}p" ${META} | cut -f ${COL})
@@ -24,6 +24,6 @@ do
     #qsub -v SRR -q copperhead doDownload.pbs
     fasterq-dump $SRR
     echo " ... gzip ... "
-    gzip ${SRR}*
+    # gzip ${SRR}*
     echo "Done with $SRR."
 done
