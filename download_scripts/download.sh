@@ -1,6 +1,8 @@
 
 #!/bin/bash
-#mkdir logs; download.sh &> logs/download.log
+mkdir logs; download.sh &> logs/download.log
+
+echo "in $(pwd) directory"
 
 module load sra-tools  
 
@@ -22,8 +24,8 @@ do
     echo "Getting ${SRR}..."
     #export SRR
     #qsub -v SRR -q copperhead doDownload.pbs
-    fasterq-dump $SRR
-    echo " ... gzip ... "
+    nohaup fasterq-dump $SRR -O ../sequences
+    # echo " ... gzip ... "
     # gzip ${SRR}*
     echo "Done with $SRR."
 done
