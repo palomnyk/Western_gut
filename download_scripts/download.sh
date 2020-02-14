@@ -24,7 +24,7 @@ do
     echo "Getting ${SRR}..."
     #export SRR
     #qsub -v SRR -q copperhead doDownload.pbs
-    nohaup fasterq-dump $SRR -O ../sequences
+    nohup fasterq-dump $SRR -O ../sequences
     # echo " ... gzip ... "
     # gzip ${SRR}*
     echo "Done with $SRR."
