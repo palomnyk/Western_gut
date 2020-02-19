@@ -1,4 +1,4 @@
-Samples CS.046,	corresponding to ERR2836410, is missing from metadata.
+Sample CS.046,	corresponding to ERR2836410, is missing from metadata.
 
 In metadata but not in repository:
 IMP.178
