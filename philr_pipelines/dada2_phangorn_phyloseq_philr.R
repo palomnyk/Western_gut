@@ -1,4 +1,4 @@
-
+# Author: Aaron Yerke
 # This is a pipeline that was created to explore the philr transform.
 # Many resources were used to create this pipeline:
 #   Processing the sequences through DADA2, making trees with phangorn, and putting them into phyloseq objects:
@@ -18,7 +18,6 @@
 rm(list = ls()) #clear workspace
 
 library("knitr")
-library("BiocStyle")
 .cran_packages <- c("ggplot2", "gridExtra")
 .bioc_packages <- c("dada2", "phyloseq", "DECIPHER", "phangorn")
 .inst <- .cran_packages %in% installed.packages()
@@ -30,6 +29,12 @@ if(any(!.inst)) {
   source("http://bioconductor.org/biocLite.R")
   biocLite(.bioc_packages[!.inst], ask = F)
 }
+library("dada2")
+library("phyloseq")
+library("DECIPHER")
+library("phangorn")
+library("ggplot2")
+library("gridExtra")
 
 home_dir = file.path('~','git','Western_gut')
 output_dir = file.path('~','git','Western_gut', 'output')
@@ -38,15 +43,27 @@ project = "RDP Western Gut"
 f_path <- "~/git/Western_gut/sequences" # CHANGE ME to the directory containing the fastq files after unzipping.
 list.files(f_path)
 
+print(paste("Length files:", length(list.files(f_path))))
+
 # Forward and reverse fastq filenames have format: SAMPLENAME_R1_001.fastq and SAMPLENAME_R2_001.fastq
 fnFs <- sort(list.files(f_path, pattern="_1.fastq", full.names = TRUE))
 fnRs <- sort(list.files(f_path, pattern="_2.fastq", full.names = TRUE))
 # Extract sample names, assuming filenames have format: SAMPLENAME_XXX.fastq
 sampleNames <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 
+print(paste("Length sampleNames:", length(sampleNames)))
+
+# fnFs <- file.path(fnFs)
+# fnRs <- file.path(fnRs)
+
 filt_path <- file.path(f_path, "filtered") # Place filtered files in filtered/ subdirectory
+if(!file_test("-d", filt_path)) dir.create(filt_path) # if it doesn't exit, create it
+
 filtFs <- file.path(filt_path, paste0(sampleNames, "_F_filt.fastq.gz"))
 filtRs <- file.path(filt_path, paste0(sampleNames, "_R_filt.fastq.gz"))
+
+test = data.frame(cbind(fnFs, fnRs, filtFs, filtRs))
+print(test)
 
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240,180),
                      maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
@@ -61,17 +78,29 @@ derepRs <- derepFastq(filtRs, verbose=TRUE)
 names(derepFs) <- sampleNames
 names(derepRs) <- sampleNames
 
+print(paste("Length dereFs:", length(derepFs)))
+print(paste("Length dereRs:", length(derepRs)))
+
 errF <- learnErrors(filtFs, multithread=TRUE)
 errR <- learnErrors(filtRs, multithread=TRUE)
-plotErrors(errF, nominalQ=TRUE)
 
-dadaFs <- dada(derepFs, err=ddF[[1]]$err_out, pool=TRUE)
-dadaRs <- dada(derepRs, err=ddR[[1]]$err_out, pool=TRUE)
-# Alternative: 
-# dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
-# dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+png(filename="plotErrorsErrF.png")
+plot(plotErrors(errF, nominalQ=TRUE))
+dev.off()
+png(filename="plotErrorsErrR.png")
+plot(plotErrors(errF, nominalQ=TRUE))
+dev.off()
 
+dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
+dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+
+print("Printing dadaFs")
+dadaFs[[1]]
+dadaRs[[1]]
+
+print("mergePairs")
 mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs)
+print("merge complete")
 
 seqtabAll <- makeSequenceTable(mergers[])
 table(nchar(getSequences(seqtabAll)))
