@@ -6,3 +6,5 @@ IMP.211
 IMP.263
 IMP.264
 IMP.267
+
+scp amyerke@hpc.uncc.edu:~/git/Western_gut/philr_pipelines/errF.pdf ~/git/Western_gut/output/errF.pdf
