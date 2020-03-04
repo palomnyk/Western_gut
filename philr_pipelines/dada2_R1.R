@@ -13,8 +13,8 @@ output_dir = file.path('~','git','Western_gut', 'output',"dada2")
 
 # Forward and reverse fastq filenames have format: SAMPLENAME_1.fastq and SAMPLENAME_2.fastq
 fnFs <- sort(list.files(f_path, pattern="_1.fastq", full.names = TRUE))
-sampleNames <- gsub("_1.fastq", "", fnFs, fixed=TRUE)
-fnFs <- file.path(f_path, fnFs)
+sampleNames <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
+
 filt_path <- file.path(f_path, "filtered") # Place filtered files in filtered/ subdirectory
 filtFs <- file.path(filt_path, paste0(sampleNames, "_R1_filt.fastq"))
 
@@ -41,8 +41,8 @@ seqtab <- makeSequenceTable(dds)
 #Removing chimeras
 seqtab <- removeBimeraDenovo(seqtab, method="consensus", multithread=FALSE)
 
-saveRDS(seqtab, paste0(output,"/ForwardsReads_DADA2.rds"))
-write.table(seqtab,file=paste0(output,"/ForwardReads_DADA2.txt"),sep="\t")
+saveRDS(seqtab, paste0(output_dir,"/ForwardsReads_DADA2.rds"))
+write.table(seqtab,file=paste0(output_dir,"/ForwardReads_DADA2.txt"),sep="\t")
 
 
 
