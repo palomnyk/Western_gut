@@ -43,76 +43,41 @@ project = "RDP Western Gut"
 f_path <- "~/git/Western_gut/sequences" # CHANGE ME to the directory containing the fastq files after unzipping.
 list.files(f_path)
 
-print(paste("Length files:", length(list.files(f_path))))
-
-# Forward and reverse fastq filenames have format: SAMPLENAME_R1_001.fastq and SAMPLENAME_R2_001.fastq
+# Forward and reverse fastq filenames have format: SAMPLENAME_1.fastq and SAMPLENAME_2.fastq
 fnFs <- sort(list.files(f_path, pattern="_1.fastq", full.names = TRUE))
-fnRs <- sort(list.files(f_path, pattern="_2.fastq", full.names = TRUE))
-# Extract sample names, assuming filenames have format: SAMPLENAME_XXX.fastq
 sampleNames <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 
-print(paste("Length sampleNames:", length(sampleNames)))
-
-# fnFs <- file.path(fnFs)
-# fnRs <- file.path(fnRs)
-
 filt_path <- file.path(f_path, "filtered") # Place filtered files in filtered/ subdirectory
-if(!file_test("-d", filt_path)) dir.create(filt_path) # if it doesn't exit, create it
+filtFs <- file.path(filt_path, paste0(sampleNames, "_R1_filt.fastq"))
 
-filtFs <- file.path(filt_path, paste0(sampleNames, "_F_filt.fastq.gz"))
-filtRs <- file.path(filt_path, paste0(sampleNames, "_R_filt.fastq.gz"))
+#Filter
+out <- filterAndTrim(fnFs, filtFs,truncLen=240,
+                     maxN=0, maxEE=c(2), truncQ=2, rm.phix=TRUE,
+                     compress=FALSE, multithread=TRUE) 
 
-test = data.frame(cbind(fnFs, fnRs, filtFs, filtRs))
-print(test)
+dds <- vector("list", length(sampleNames))
+names(dds) <- sampleNames
 
-out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240,180),
-                     maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
-                     compress=TRUE, multithread=TRUE)
+index <-1 
 
-head(out)
+for (f in filtFs){
+  errF <- learnErrors(f, multithread = FALSE)
+  derepFs <- derepFastq(f, verbose=TRUE)
+  dadaFs <- dada(derepFs, err=errF, multithread=FALSE)
+  dds[[index]]<-dadaFs
+  index<-index+1
+}
 
-#dereplication combines identical sequences and creates an abundance chart of 
-derepFs <- derepFastq(filtFs, verbose=TRUE)
-derepRs <- derepFastq(filtRs, verbose=TRUE)
-# Name the derep-class objects by the sample names
-names(derepFs) <- sampleNames
-names(derepRs) <- sampleNames
+seqtab <- makeSequenceTable(dds)
 
-print(paste("Length dereFs:", length(derepFs)))
-print(paste("Length dereRs:", length(derepRs)))
-
-errF <- learnErrors(filtFs, multithread=TRUE)
-errR <- learnErrors(filtRs, multithread=TRUE)
-
-png(filename="plotErrorsErrF.png")
-plot(plotErrors(errF, nominalQ=TRUE))
-dev.off()
-png(filename="plotErrorsErrR.png")
-plot(plotErrors(errF, nominalQ=TRUE))
-dev.off()
-
-dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
-dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
-
-print("Printing dadaFs")
-dadaFs[[1]]
-dadaRs[[1]]
-
-print("mergePairs")
-mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs)
-print("merge complete")
-
-seqtabAll <- makeSequenceTable(mergers[])
-table(nchar(getSequences(seqtabAll)))
-
-seqtabNoC <- removeBimeraDenovo(seqtabAll)
-
+#Removing chimeras
+seqtab <- removeBimeraDenovo(seqtab, method="consensus", multithread=FALSE)
 
 fastaRef <- file.path(home_dir, 'philr_pipelines', "taxonomy", "./rdp_train_set_16.fa.gz")
 taxTab <- assignTaxonomy(seqtabNoC, refFasta = fastaRef, multithread=TRUE)
 unname(head(taxTab))
 
-seqs <- getSequences(seqtabNoC)
+seqs <- getSequences(seqtab)
 names(seqs) <- seqs # This propagates to the tip labels of the tree
 alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA,verbose=FALSE)
 
