@@ -76,7 +76,6 @@ seqtab <- removeBimeraDenovo(seqtab, method="consensus", multithread=FALSE)
 saveRDS(seqtab, paste0(output_dir,"dada2/ForwardsReads_DADA2.rds"))
 write.table(seqtab,file=paste0(output_dir,"dada2/ForwardReads_DADA2.txt"),sep="\t")
 
-
 fastaRef <- file.path(home_dir, 'philr_pipelines', "taxonomy", "./rdp_train_set_16.fa.gz")
 taxTab <- assignTaxonomy(seqtabNoC, refFasta = fastaRef, multithread=TRUE)
 unname(head(taxTab))
@@ -94,21 +93,8 @@ fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 detach("package:phangorn", unload=TRUE)
 
-samdf <- read.csv("https://raw.githubusercontent.com/spholmes/F1000_workflow/master/data/MIMARKS_Data_combined.csv",header=TRUE)
-samdf$SampleID <- paste0(gsub("00", "", samdf$host_subject_id), "D", samdf$age-21)
-samdf <- samdf[!duplicated(samdf$SampleID),] # Remove dupicate entries for reverse reads
-rownames(seqtabAll) <- gsub("124", "125", rownames(seqtabAll)) # Fix discrepancy
-all(rownames(seqtabAll) %in% samdf$SampleID) # TRUE
-rownames(samdf) <- samdf$SampleID
-keep.cols <- c("collection_date", "biome", "target_gene", "target_subfragment",
-               "host_common_name", "host_subject_id", "age", "sex", "body_product", "tot_mass",
-               "diet", "family_relationship", "genotype", "SampleID") 
-samdf <- samdf[rownames(seqtabAll), keep.cols]
-
-ps <- phyloseq(otu_table(seqtabNoC, taxa_are_rows=FALSE), 
-               sample_data(samdf), 
+ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE), 
                tax_table(taxTab),phy_tree(fitGTR$tree))
-ps <- prune_samples(sample_names(ps) != "Mock", ps) # Remove mock sample
 ps
 
 # Install philr
