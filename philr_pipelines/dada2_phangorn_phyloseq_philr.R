@@ -73,6 +73,10 @@ seqtab <- makeSequenceTable(dds)
 #Removing chimeras
 seqtab <- removeBimeraDenovo(seqtab, method="consensus", multithread=FALSE)
 
+saveRDS(seqtab, paste0(output_dir,"dada2/ForwardsReads_DADA2.rds"))
+write.table(seqtab,file=paste0(output_dir,"dada2/ForwardReads_DADA2.txt"),sep="\t")
+
+
 fastaRef <- file.path(home_dir, 'philr_pipelines', "taxonomy", "./rdp_train_set_16.fa.gz")
 taxTab <- assignTaxonomy(seqtabNoC, refFasta = fastaRef, multithread=TRUE)
 unname(head(taxTab))
