@@ -73,8 +73,9 @@ seqtab <- makeSequenceTable(dds)
 #Removing chimeras
 seqtab <- removeBimeraDenovo(seqtab, method="consensus", multithread=FALSE)
 
-fil <- tempfile(file.path(output_dir,"dada2","ForwardReads_DADA2.rds"))
-print(fil)
+seqtabPath  <-file.path(output_dir,"dada2","ForwardReads_DADA2.rds")
+print(seqtabPath)
+fil <- tempfile(seqtabPath, fileext = ".rds")
 saveRDS(seqtab, fil)
 write.table(seqtab,file.path(output_dir,"dada2","ForwardReads_DADA2.txt"),sep="\t")
 
