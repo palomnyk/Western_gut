@@ -49,8 +49,7 @@ setwd(file.path("~", "git","Western_gut", "philr_pipelines"))
 con <- gzfile("ForwardReads_DADA2.rds")
 seqtab = readRDS(con)
 
-saveRDS(seqtab, "ForwardReads_DADA2.rds")
-write.table(seqtab,file.path(output_dir,"dada2","ForwardReads_DADA2.txt"),sep="\t")
+readRDS(seqtab, "ForwardReads_DADA2.rds")
 
 fastaRef <- file.path(home_dir, 'philr_pipelines', "taxonomy", "./rdp_train_set_16.fa.gz")
 taxTab <- assignTaxonomy(seqtab, refFasta = fastaRef, multithread=TRUE)
@@ -59,6 +58,7 @@ unname(head(taxTab))
 seqs <- getSequences(seqtab)
 names(seqs) <- seqs # This propagates to the tip labels of the tree
 alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA,verbose=FALSE)
+print("Alignment completed")
 
 phangAlign <- phyDat(as(alignment, "matrix"), type="DNA")
 dm <- dist.ml(phangAlign)
@@ -68,6 +68,8 @@ fitGTR <- update(fit, k=4, inv=0.2)
 fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 detach("package:phangorn", unload=TRUE)
+
+print("phangorn completed")
 
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE), 
                tax_table(taxTab),phy_tree(fitGTR$tree))
@@ -81,6 +83,8 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 BiocManager::install("philr")
 library("philr")
 
+print("philr installed")
+
 ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
 ps <-  filter_taxa(ps, function(x) sd(x)/mean(x) > 3.0, TRUE)
 ps <- transform_sample_counts(ps, function(x) x+1)
@@ -90,7 +94,9 @@ ps
 G_tree <- phy_tree(ps)
 
 ## ---- message=FALSE, warning=FALSE-----------------------------------------
+print("rooted tree?")
 is.rooted(phy_tree(ps)) # Is the tree Rooted?
+print('All multichotomies resolved?')
 is.binary.tree(phy_tree(ps)) # All multichotomies resolved?
 
 ## ---- message=FALSE, warning=FALSE-----------------------------------------
