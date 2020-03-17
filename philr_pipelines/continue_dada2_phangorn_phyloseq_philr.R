@@ -42,14 +42,12 @@ output_dir = file.path('~','git','Western_gut', 'output')
 project = "RDP Western Gut"
 #f_path = c('.', 'biolockj', 'rdp_2020Feb19', '04_BuildTaxaTables','output','rdp_2020Feb19_taxaCount_genus.tsv')
 f_path <- "~/git/Western_gut/sequences" # CHANGE ME to the directory containing the fastq files after unzipping.
-list.files(f_path)
+#list.files(f_path)
 
 setwd(file.path("~", "git","Western_gut", "philr_pipelines"))
 
 con <- gzfile("ForwardReads_DADA2.rds")
 seqtab = readRDS(con)
-
-readRDS(seqtab, "ForwardReads_DADA2.rds")
 
 fastaRef <- file.path(home_dir, 'philr_pipelines', "taxonomy", "./rdp_train_set_16.fa.gz")
 taxTab <- assignTaxonomy(seqtab, refFasta = fastaRef, multithread=TRUE)
@@ -79,7 +77,7 @@ ps
 # try http:// if https:// URLs are not supported
 if (!requireNamespace("BiocManager", quietly=TRUE))
   install.packages("BiocManager")
-# BiocManager::install("BiocUpgrade") ## you may need this
+BiocManager::install("BiocUpgrade") ## you may need this
 BiocManager::install("philr")
 library("philr")
 
