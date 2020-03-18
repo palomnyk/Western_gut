@@ -15,21 +15,28 @@
 #     Code example:
 #       https://bioconductor.org/packages/release/bioc/vignettes/philr/inst/doc/philr-intro.R
 
-
 rm(list = ls()) #clear workspace
-
-library("knitr")
-.cran_packages <- c("ggplot2", "gridExtra")
-.bioc_packages <- c("dada2", "phyloseq", "DECIPHER", "phangorn")
-.inst <- .cran_packages %in% installed.packages()
-if(any(!.inst)) {
-  install.packages(.cran_packages[!.inst])
-}
-.inst <- .bioc_packages %in% installed.packages()
-if(any(!.inst)) {
-  source("http://bioconductor.org/biocLite.R")
-  biocLite(.bioc_packages[!.inst], ask = F)
-}
+# .cran_packages <- c("ggplot2", "gridExtra")
+# .bioc_packages <- c("dada2", "phyloseq", "DECIPHER", "phangorn")
+# .inst <- .cran_packages %in% installed.packages()
+# if(any(!.inst)) {
+#   install.packages(.cran_packages[!.inst])
+# }
+# .inst <- .bioc_packages %in% installed.packages()
+# if(any(!.inst)) {
+#   source("http://bioconductor.org/biocLite.R")
+#   biocLite(.bioc_packages[!.inst], ask = F)
+# }
+#try http:// if https:// URLs are not supported
+if (!requireNamespace("BiocManager", quietly=TRUE))
+  install.packages("BiocManager")
+# BiocManager::install("BiocUpgrade") ## you may need this
+BiocManager::install("dada2")
+BiocManager::install("phyloseq")
+BiocManager::install("DECIPHER")
+BiocManager::install("phangorn")
+BiocManager::install("ggplot2")
+BiocManager::install("gridExtra")
 library("dada2")
 library("phyloseq")
 library("DECIPHER")
@@ -66,20 +73,16 @@ fitGTR <- update(fit, k=4, inv=0.2)
 fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 detach("package:phangorn", unload=TRUE)
+detach("package:dada2", unload=TRUE)
 
 print("phangorn completed")
 
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE), 
                tax_table(taxTab),phy_tree(fitGTR$tree))
-ps
+# ps
 
 # Install philr
-# try http:// if https:// URLs are not supported
-if (!requireNamespace("BiocManager", quietly=TRUE))
-  install.packages("BiocManager")
-BiocManager::install("BiocUpgrade") ## you may need this
-BiocManager::install("philr")
-library("philr")
+library(philr); packageVersion("philr")
 
 print("philr installed")
 
