@@ -77,8 +77,19 @@ detach("package:dada2", unload=TRUE)
 
 print("phangorn completed")
 
-ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE), 
-               tax_table(taxTab),phy_tree(fitGTR$tree))
+myMeta = read.table(file.path(home_dir,'metadata.txt'), 
+                    sep="\t", 
+                    header=TRUE, 
+                    row.names = 1, 
+                    check.names = FALSE,
+                    stringsAsFactors=FALSE)
+
+ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
+               sameple_data(myMeta)
+               tax_table(taxTab),
+               phy_tree(fitGTR$tree))
+
+print("Created ps")
 # ps
 
 # Install philr
