@@ -16,17 +16,7 @@
 #       https://bioconductor.org/packages/release/bioc/vignettes/philr/inst/doc/philr-intro.R
 
 rm(list = ls()) #clear workspace
-# .cran_packages <- c("ggplot2", "gridExtra")
-# .bioc_packages <- c("dada2", "phyloseq", "DECIPHER", "phangorn")
-# .inst <- .cran_packages %in% installed.packages()
-# if(any(!.inst)) {
-#   install.packages(.cran_packages[!.inst])
-# }
-# .inst <- .bioc_packages %in% installed.packages()
-# if(any(!.inst)) {
-#   source("http://bioconductor.org/biocLite.R")
-#   biocLite(.bioc_packages[!.inst], ask = F)
-# }
+
 #try http:// if https:// URLs are not supported
 if (!requireNamespace("BiocManager", quietly=TRUE))
   install.packages("BiocManager")
@@ -38,11 +28,8 @@ BiocManager::install("phangorn")
 BiocManager::install("ggplot2")
 BiocManager::install("gridExtra")
 library("dada2")
-library("phyloseq")
 library("DECIPHER")
 library("phangorn")
-library("ggplot2")
-library("gridExtra")
 
 home_dir = file.path('~','git','Western_gut')
 output_dir = file.path('~','git','Western_gut', 'output')
@@ -74,6 +61,7 @@ fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 detach("package:phangorn", unload=TRUE)
 detach("package:dada2", unload=TRUE)
+detach("DECIPHER", unload=TRUE)
 
 print("phangorn completed")
 
@@ -90,6 +78,11 @@ ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
                phy_tree(fitGTR$tree))
 
 print("Created ps")
+=======
+library("phyloseq")
+
+ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE), 
+               tax_table(taxTab),phy_tree(fitGTR$tree))
 # ps
 
 # Install philr
@@ -120,7 +113,9 @@ name.balance(phy_tree(ps), tax_table(ps), 'n1')
 ## --------------------------------------------------------------------------
 otu.table <- t(otu_table(ps))
 tree <- phy_tree(ps)
+print("accessing sample data")
 metadata <- sample_data(ps)
+print("accessing taxanomic data")
 tax <- tax_table(ps)
 
 otu.table[1:2,1:2] # OTU Table
@@ -182,6 +177,9 @@ annotate_balance(tree, 'n730', p=p, labels = c('n730+', 'n730-'),
 ## --------------------------------------------------------------------------
 ps.philr.long <- convert_to_long(ps.philr, get_variable(ps, 'human')) %>%
   filter(coord %in% top.coords)
+
+library("ggplot2")
+library("gridExtra")
 
 ggplot(ps.philr.long, aes(x=labels, y=value)) +
   geom_boxplot(fill='lightgrey') +
