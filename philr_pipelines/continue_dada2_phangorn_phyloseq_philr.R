@@ -61,7 +61,7 @@ fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 detach("package:phangorn", unload=TRUE)
 detach("package:dada2", unload=TRUE)
-detach("DECIPHER", unload=TRUE)
+detach("package:DECIPHER", unload=TRUE)
 
 print("phangorn completed")
 
@@ -80,6 +80,9 @@ ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
                tax_table(taxTab),
                phy_tree(fitGTR$tree))
 # ps
+
+setwd(file.path("~", "git","Western_gut", "philr_pipelines"))
+saveRDS(seqtab, "ForwardReads_DADA2.rds")
 
 # Install philr
 library(philr); packageVersion("philr")
