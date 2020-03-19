@@ -65,6 +65,9 @@ detach("DECIPHER", unload=TRUE)
 
 print("phangorn completed")
 
+print("Created ps")
+library("phyloseq")
+
 myMeta = read.table(file.path(home_dir,'metadata.txt'), 
                     sep="\t", 
                     header=TRUE, 
@@ -73,16 +76,9 @@ myMeta = read.table(file.path(home_dir,'metadata.txt'),
                     stringsAsFactors=FALSE)
 
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
-               sameple_data(myMeta)
+               sameple_data(myMeta),
                tax_table(taxTab),
                phy_tree(fitGTR$tree))
-
-print("Created ps")
-=======
-library("phyloseq")
-
-ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE), 
-               tax_table(taxTab),phy_tree(fitGTR$tree))
 # ps
 
 # Install philr
