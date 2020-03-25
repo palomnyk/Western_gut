@@ -29,7 +29,7 @@ rm(list = ls()) #clear workspace
 library("DECIPHER")
 library("phangorn")
 library("phyloseq")
-library("ape")
+#library("ape")
 
 home_dir = file.path('~','git','Western_gut')
 #home_dir = file.path('cloud','project')
@@ -38,13 +38,13 @@ project = "RDP Western Gut"
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 # list.files(f_path)
 
-setwd(file.path(home_dir, "philr_pipelines"))
+#setwd(file.path(home_dir))
 
-con <- gzfile("ForwardReads_DADA2.rds")
-seqtab = 
+con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2.rds"))
+seqtab = readRDS(con)
 
-con <- gzfile("ForwardReads_DADA2.rds")
-alignment <- readRDS("ForwardReads_DADA2_alignment.rds")
+con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2_alignment.rds"))
+alignment <- readRDS(con)
 
 phangAlign <- phyDat(as(alignment, "matrix"), type="DNA")
 dm <- dist.ml(phangAlign)
