@@ -29,6 +29,7 @@ rm(list = ls()) #clear workspace
 library("DECIPHER")
 library("phangorn")
 library("phyloseq")
+library("ape")
 
 home_dir = file.path('~','git','Western_gut')
 #home_dir = file.path('cloud','project')
@@ -40,18 +41,10 @@ f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containi
 setwd(file.path(home_dir, "philr_pipelines"))
 
 con <- gzfile("ForwardReads_DADA2.rds")
-seqtab = readRDS(con)
+seqtab = 
 
-fastaRef <- file.path(home_dir, 'philr_pipelines', "taxonomy", "./rdp_train_set_16.fa.gz")
-taxTab <- assignTaxonomy(seqtab, refFasta = fastaRef, multithread=TRUE)
-unname(head(taxTab))
-
-seqs <- getSequences(seqtab)
-
-names(seqs) <- seqs # This propagates to the tip labels of the tree
-
-alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA,verbose=FALSE)
-print("Alignment completed")
+con <- gzfile("ForwardReads_DADA2.rds")
+alignment <- readRDS("ForwardReads_DADA2_alignment.rds")
 
 phangAlign <- phyDat(as(alignment, "matrix"), type="DNA")
 dm <- dist.ml(phangAlign)

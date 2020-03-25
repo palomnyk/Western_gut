@@ -68,3 +68,17 @@ seqtab <- removeBimeraDenovo(seqtab, method="consensus", multithread=FALSE)
 setwd(file.path(home_dir, "philr_pipelines"))
 saveRDS(seqtab, "ForwardReads_DADA2.rds")
 write.table(seqtab,file.path(output_dir,"dada2","ForwardReads_DADA2.txt"),sep="\t")
+
+fastaRef <- file.path(home_dir, 'philr_pipelines', "taxonomy", "./rdp_train_set_16.fa.gz")
+taxTab <- assignTaxonomy(seqtab, refFasta = fastaRef, multithread=TRUE)
+unname(head(taxTab))
+
+seqs <- getSequences(seqtab)
+
+names(seqs) <- seqs # This propagates to the tip labels of the tree
+
+alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA,verbose=FALSE)
+
+saveRDS(alignment, "ForwardReads_DADA2_alignment.rds")
+
+print("Alignment completed")
