@@ -35,10 +35,9 @@ project = "RDP Western Gut"
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 # list.files(f_path)
 
-setwd(file.path(home_dir, "philr_pipelines"))
+setwd(file.path(home_dir))
 
-setwd(file.path(home_dir, "philr_pipelines"))
-con <- gzfile("ForwardReads_DADA2.rds")
+con <- gzfile(file.path( "philr_pipelines","phyloseq_obj.rds"))
 ps = readRDS(con)
 
 ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)

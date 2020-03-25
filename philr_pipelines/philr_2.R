@@ -31,20 +31,23 @@ library("phangorn")
 library("phyloseq")
 #library("ape")
 
-home_dir = file.path('~','git','Western_gut')
-#home_dir = file.path('cloud','project')
+#home_dir = file.path('~','git','Western_gut')
+home_dir = file.path('cloud','project')
 output_dir = file.path(home_dir, 'output')
 project = "RDP Western Gut"
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 # list.files(f_path)
 
-#setwd(file.path(home_dir))
+setwd(file.path(home_dir))
 
 con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2.rds"))
 seqtab = readRDS(con)
 
 con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2_alignment.rds"))
 alignment <- readRDS(con)
+
+con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2_taxonomy.rds"))
+taxTab <- readRDS(con)
 
 phangAlign <- phyDat(as(alignment, "matrix"), type="DNA")
 dm <- dist.ml(phangAlign)
@@ -56,7 +59,7 @@ fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
 print("phangorn completed")
 
 
-myMeta = read.table(file.path(home_dir,'PRJEB28687.txt'), 
+myMeta = read.table(file.path('PRJEB28687.txt'), 
                     sep="\t", 
                     header=TRUE, 
                     row.names = "run_accession", 
@@ -70,5 +73,5 @@ ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
 # ps
 print("Created ps")
 
-setwd(file.path(home_dir, "philr_pipelines"))
-saveRDS(ps, "phyloseq_obj.rds")
+# setwd(file.path(home_dir, "philr_pipelines"))
+saveRDS(ps, file.path("philr_pipelines", "phyloseq_obj.rds"))
