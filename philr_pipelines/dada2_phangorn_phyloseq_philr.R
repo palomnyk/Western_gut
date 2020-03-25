@@ -34,11 +34,11 @@ BiocManager::install("tidyr")
 
 library("dada2")
 
-home_dir = file.path('~','git','Western_gut')
-output_dir = file.path('~','git','Western_gut', 'output')
+# home_dir = file.path('~','git','Western_gut')
+home_dir = file.path('cloud','project')
+output_dir = file.path(home_dir, 'output')
 project = "RDP Western Gut"
-#f_path = c('.', 'biolockj', 'rdp_2020Feb19', '04_BuildTaxaTables','output','rdp_2020Feb19_taxaCount_genus.tsv')
-f_path <- "~/git/Western_gut/sequences" # CHANGE ME to the directory containing the fastq files after unzipping.
+f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 # list.files(f_path)
 
 # Forward and reverse fastq filenames have format: SAMPLENAME_1.fastq and SAMPLENAME_2.fastq
@@ -74,7 +74,7 @@ seqtab <- removeBimeraDenovo(seqtab, method="consensus", multithread=FALSE)
 # seqtabPath  <-file.path(output_dir,"dada2","ForwardReads_DADA2.rds")
 # print(seqtabPath)
 # fil <- tempfile(seqtabPath, fileext = ".rds")
-setwd(file.path("~", "git","Western_gut", "philr_pipelines"))
+setwd(file.path(home_dir, "philr_pipelines"))
 saveRDS(seqtab, "ForwardReads_DADA2.rds")
 write.table(seqtab,file.path(output_dir,"dada2","ForwardReads_DADA2.txt"),sep="\t")
 
@@ -121,7 +121,7 @@ ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
 # ps
 print("Created ps")
 
-setwd(file.path("~", "git","Western_gut", "philr_pipelines"))
+setwd(file.path(home_dir, "philr_pipelines"))
 saveRDS(ps, "phyloseq_obj.rds")
 
 # Install philr
