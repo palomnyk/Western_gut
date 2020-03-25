@@ -79,6 +79,7 @@ names(seqs) <- seqs # This propagates to the tip labels of the tree
 
 alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA,verbose=FALSE)
 
+saveRDS(taxTab, "ForwardReads_DADA2_taxonomy.rds")
 saveRDS(alignment, "ForwardReads_DADA2_alignment.rds")
 
 print("Alignment completed")
