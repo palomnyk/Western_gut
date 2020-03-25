@@ -17,31 +17,29 @@
 
 rm(list = ls()) #clear workspace
 
-library("knitr")
-.cran_packages <- c("ggplot2", "gridExtra")
-.bioc_packages <- c("dada2", "phyloseq", "DECIPHER", "phangorn")
-.inst <- .cran_packages %in% installed.packages()
-if(any(!.inst)) {
-  install.packages(.cran_packages[!.inst])
-}
-.inst <- .bioc_packages %in% installed.packages()
-if(any(!.inst)) {
-  source("http://bioconductor.org/biocLite.R")
-  biocLite(.bioc_packages[!.inst], ask = F)
-}
+# ‘ape’, ‘dplyr’, ‘reshape2’, ‘plyr’
+# .cran_packages <- c("ggplot2", "gridExtra")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+install.packages("phangorn")
+BiocManager::install(c("Biostrings", "seqLogo"))
+if (!requireNamespace("BiocManager", quietly = TRUE))
+BiocManager::install("dada2",type = "source", checkBuilt = TRUE)
+BiocManager::install("phyloseq")
+BiocManager::install("DECIPHER")
+BiocManager::install("ggplot2", type = "source", checkBuilt = TRUE)
+BiocManager::install("gridExtra",type = "source", checkBuilt = TRUE)
+BiocManager::install("philr")
+BiocManager::install("tidyr")
+
 library("dada2")
-library("phyloseq")
-library("DECIPHER")
-library("phangorn")
-library("ggplot2")
-library("gridExtra")
 
 home_dir = file.path('~','git','Western_gut')
 output_dir = file.path('~','git','Western_gut', 'output')
 project = "RDP Western Gut"
 #f_path = c('.', 'biolockj', 'rdp_2020Feb19', '04_BuildTaxaTables','output','rdp_2020Feb19_taxaCount_genus.tsv')
 f_path <- "~/git/Western_gut/sequences" # CHANGE ME to the directory containing the fastq files after unzipping.
-list.files(f_path)
+# list.files(f_path)
 
 # Forward and reverse fastq filenames have format: SAMPLENAME_1.fastq and SAMPLENAME_2.fastq
 fnFs <- sort(list.files(f_path, pattern="_1.fastq", full.names = TRUE))
@@ -85,7 +83,12 @@ taxTab <- assignTaxonomy(seqtab, refFasta = fastaRef, multithread=TRUE)
 unname(head(taxTab))
 
 seqs <- getSequences(seqtab)
+
+detach("package:dada2", unload=TRUE)
 names(seqs) <- seqs # This propagates to the tip labels of the tree
+library("DECIPHER")
+library("phangorn")
+
 alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA,verbose=FALSE)
 print("Alignment completed")
 
@@ -97,20 +100,32 @@ fitGTR <- update(fit, k=4, inv=0.2)
 fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 detach("package:phangorn", unload=TRUE)
+detach("package:DECIPHER", unload=TRUE)
 
 print("phangorn completed")
 
-ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE), 
-               tax_table(taxTab),phy_tree(fitGTR$tree))
-ps
+
+library("phyloseq")
+
+myMeta = read.table(file.path(home_dir,'PRJEB28687.txt'), 
+                    sep="\t", 
+                    header=TRUE, 
+                    row.names = "run_accession", 
+                    check.names = FALSE,
+                    stringsAsFactors=FALSE)
+
+ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
+               sample_data(myMeta),
+               tax_table(taxTab),
+               phy_tree(fitGTR$tree))
+# ps
+print("Created ps")
+
+setwd(file.path("~", "git","Western_gut", "philr_pipelines"))
+saveRDS(ps, "phyloseq_obj.rds")
 
 # Install philr
-# try http:// if https:// URLs are not supported
-if (!requireNamespace("BiocManager", quietly=TRUE))
-  install.packages("BiocManager")
-# BiocManager::install("BiocUpgrade") ## you may need this
-BiocManager::install("philr")
-library("philr")
+library(philr); packageVersion("philr")
 
 print("philr installed")
 
@@ -137,12 +152,13 @@ name.balance(phy_tree(ps), tax_table(ps), 'n1')
 ## --------------------------------------------------------------------------
 otu.table <- t(otu_table(ps))
 tree <- phy_tree(ps)
+print("accessing sample data")
 metadata <- sample_data(ps)
+print("accessing taxanomic data")
 tax <- tax_table(ps)
 
 otu.table[1:2,1:2] # OTU Table
 tree # Phylogenetic Tree
-head(metadata,2) # Metadata
 head(tax,2) # taxonomy table
 
 ## --------------------------------------------------------------------------
@@ -199,6 +215,9 @@ annotate_balance(tree, 'n730', p=p, labels = c('n730+', 'n730-'),
 ## --------------------------------------------------------------------------
 ps.philr.long <- convert_to_long(ps.philr, get_variable(ps, 'human')) %>%
   filter(coord %in% top.coords)
+
+library("ggplot2")
+library("gridExtra")
 
 ggplot(ps.philr.long, aes(x=labels, y=value)) +
   geom_boxplot(fill='lightgrey') +

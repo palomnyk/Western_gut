@@ -119,8 +119,7 @@ tax <- tax_table(ps)
 
 otu.table[1:2,1:2] # OTU Table
 tree # Phylogenetic Tree
-head(metadata,2) # Metadata
-head(tax,2) # taxonomy table
+vershead(tax,2) # taxonomy table
 
 ## --------------------------------------------------------------------------
 ps.philr <- philr(otu.table, tree, 
