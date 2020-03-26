@@ -29,7 +29,7 @@ rm(list = ls()) #clear workspace
 library("DECIPHER")
 library("phangorn")
 library("phyloseq")
-#library("ape")
+library("ape")
 
 #home_dir = file.path('~','git','Western_gut')
 home_dir = file.path('cloud','project')
@@ -58,8 +58,7 @@ fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 print("phangorn completed")
 
-
-myMeta = read.table(file.path('PRJEB28687.txt'), 
+myMeta = read.table(file.path("fullMetadata.tsv"), 
                     sep="\t", 
                     header=TRUE, 
                     row.names = "run_accession", 
@@ -72,6 +71,9 @@ ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
                phy_tree(fitGTR$tree))
 # ps
 print("Created ps")
+
+#examine tree
+plot_tree(ps, "treeonly", nodeplotblank, ladderize="left")
 
 # setwd(file.path(home_dir, "philr_pipelines"))
 saveRDS(ps, file.path("philr_pipelines", "phyloseq_obj.rds"))
