@@ -31,6 +31,7 @@ library("phangorn")
 library("phyloseq")
 library("ape")
 
+##----------------Establish directory layout------------------------##
 #home_dir = file.path('~','git','Western_gut')
 home_dir = file.path('cloud','project')
 output_dir = file.path(home_dir, 'output')
@@ -40,6 +41,8 @@ f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containi
 
 setwd(file.path(home_dir))
 
+
+##---------------------Import R objects-----------------------------##
 con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2.rds"))
 seqtab = readRDS(con)
 
@@ -49,9 +52,11 @@ alignment <- readRDS(con)
 con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2_taxonomy.rds"))
 taxTab <- readRDS(con)
 
+
+##------------------------Build tree--------------------------------##
 phangAlign <- phyDat(as(alignment, "matrix"), type="DNA")
 dm <- dist.ml(phangAlign)
-treeNJ <- NJ(dm) # Note, tip order != sequence order
+treeNJ <- upgma(dm) # Note, tip order != sequence order
 fit = pml(treeNJ, data=phangAlign)
 fitGTR <- update(fit, k=4, inv=0.2)
 fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
@@ -74,6 +79,11 @@ print("Created ps")
 
 #examine tree
 plot_tree(ps, "treeonly", nodeplotblank, ladderize="left")
+
+plot_tree(ps, ladderize="left", color="Religion")
+
+plot_tree(ps, ladderize="left", color="Religion", label.tips="taxa_names")
+
 
 # setwd(file.path(home_dir, "philr_pipelines"))
 saveRDS(ps, file.path("philr_pipelines", "phyloseq_obj.rds"))

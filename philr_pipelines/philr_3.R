@@ -67,12 +67,12 @@ metadata <- sample_data(ps)
 print("accessing taxanomic data")
 tax <- tax_table(ps)
 
-otu.table[1:2,1:2] # OTU Table
-tree # Phylogenetic Tree
-head(tax,2) # taxonomy table
+# otu.table[1:2,1:2] # OTU Table
+# tree # Phylogenetic Tree
+# head(tax,2) # taxonomy table
 
 ## --------------------------------------------------------------------------
-ps.philr <- philr(otu.table, tree, 
+ps.philr <- philr(t(data.frame(otu.table)), tree, 
                   part.weights='enorm.x.gm.counts', 
                   ilr.weights='blw.sqrt')
 ps.philr[1:5,1:5]
@@ -80,10 +80,10 @@ ps.philr[1:5,1:5]
 ## --------------------------------------------------------------------------
 ps.dist <- dist(ps.philr, method="euclidean")
 ps.pcoa <- ordinate(ps, 'PCoA', distance=ps.dist)
-plot_ordination(ps, ps.pcoa, color='SampleType') + geom_point(size=4)
+plot_ordination(ps, ps.pcoa, color='Religion') + geom_point(size=4)
 
 ## ---- message=FALSE, warning=FALSE-----------------------------------------
-sample_data(ps)$human <- factor(get_variable(ps, "SampleType") %in% c("Feces", "Mock", "Skin", "Tongue"))
+# sample_data(ps)$human <- factor(get_variable(ps, "SampleType") %in% c("Feces", "Mock", "Skin", "Tongue"))
 
 ## ---- message=FALSE, warning=FALSE-----------------------------------------
 library(glmnet); packageVersion('glmnet')
