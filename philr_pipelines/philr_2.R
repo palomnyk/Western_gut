@@ -19,21 +19,20 @@ rm(list = ls()) #clear workspace
 
 # ‘ape’, ‘dplyr’, ‘reshape2’, ‘plyr’
 # .cran_packages <- c("ggplot2", "gridExtra")
-# if (!requireNamespace("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-# if (!requireNamespace("phangorn", quietly = TRUE))
-#   install.packages("phangorn")  
-# BiocManager::install("phyloseq")
-# BiocManager::install("DECIPHER")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager", type = "source", repos = "http://archive.linux.duke.edu/cran/")
+if (!requireNamespace("phangorn", quietly = TRUE))
+  install.packages("phangorn",type = "source", repos = "http://archive.linux.duke.edu/cran/")
+BiocManager::install("phyloseq")
+BiocManager::install("DECIPHER")
 
 library("DECIPHER")
 library("phangorn")
 library("phyloseq")
-library("ape")
 
 ##----------------Establish directory layout------------------------##
-#home_dir = file.path('~','git','Western_gut')
-home_dir = file.path('cloud','project')
+home_dir = file.path('~','git','Western_gut')
+#home_dir = file.path('cloud','project')
 output_dir = file.path(home_dir, 'output')
 project = "RDP Western Gut"
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
@@ -78,6 +77,7 @@ ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
 print("Created ps")
 
 #examine tree
+library("ape")
 plot_tree(ps, "treeonly", nodeplotblank, ladderize="left")
 
 plot_tree(ps, ladderize="left", color="Religion")
