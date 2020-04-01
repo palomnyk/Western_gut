@@ -25,6 +25,7 @@ rm(list = ls()) #clear workspace
 # BiocManager::install("philr")
 
 library("phyloseq")
+library("ape")
 library(philr); packageVersion("philr")
 
 home_dir = file.path('~','git','Western_gut')
@@ -80,7 +81,10 @@ ps.philr[1:5,1:5]
 ## --------------------------------------------------------------------------
 ps.dist <- dist(ps.philr, method="euclidean")
 ps.pcoa <- ordinate(ps, 'PCoA', distance=ps.dist)
-plot_ordination(ps, ps.pcoa, color='Religion') + geom_point(size=4)
+
+png(filename="philr_PCOA.png")
+plot_ordination(ps, ps.pcoa, color='Religion')
+dev.off()
 
 ## ---- message=FALSE, warning=FALSE-----------------------------------------
 # sample_data(ps)$human <- factor(get_variable(ps, "SampleType") %in% c("Feces", "Mock", "Skin", "Tongue"))
