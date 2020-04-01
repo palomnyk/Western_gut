@@ -19,10 +19,11 @@ rm(list = ls()) #clear workspace
 
 # ‘ape’, ‘dplyr’, ‘reshape2’, ‘plyr’
 # .cran_packages <- c("ggplot2", "gridExtra")
-# if (!requireNamespace("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-# BiocManager::install("phyloseq")
-# BiocManager::install("philr")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("phyloseq")
+BiocManager::install("philr")
+BiocManager::install("ape")
 
 library("phyloseq")
 library("ape")
@@ -46,9 +47,6 @@ ps <- transform_sample_counts(ps, function(x) x+1)
 
 #ps
 
-G_tree <- phy_tree(ps)
-
-## ---- message=FALSE, warning=FALSE-----------------------------------------
 print("rooted tree?")
 is.rooted(phy_tree(ps)) # Is the tree Rooted?
 print('All multichotomies resolved?')
@@ -82,9 +80,19 @@ ps.philr[1:5,1:5]
 ps.dist <- dist(ps.philr, method="euclidean")
 ps.pcoa <- ordinate(ps, 'PCoA', distance=ps.dist)
 
-png(filename="philr_PCOA.png")
-plot_ordination(ps, ps.pcoa, color='Religion')
+catagoriesString = "Recruitment.Date	Sample.Date	Recruitment.Location	Researcher	Sub.Study	Sample.Month	Birth.Year	Age	Public.Housing	Medical.Assistance	Children.Free.Lunch	Highest.Education	Ethnicity	Religion	Birth.Location	Type.Birth.Location	Arrival.in.US	Years.in.US	Location.before.US	Type.location.before.US	Years.lived.in.Location.before.US	Tobacco.Use	Alcohol.Use	Height	Weight	Waist	BMI	BMI.Class	Medications	Breastfed	Years.Breastfed	Notes.Participants	Age.at.Arrival	Weight.M6	BMI.M6	Waist.M6	Measurement.Date.M6	Sample.Order	Sample.Group	Waist.Height.Ratio"
+catagoriesString = unlist(strsplit(catagoriesString, split = "\t"))
+
+setwd(output_dir)
+
+pdf(paste0("philr_PCOA", ".pdf"))
+for (catag in catagoriesString){
+  print(catag)
+  plot_ordination(ps, ps.pcoa, color=trimws(catag))
+}
 dev.off()
+
+print("done with PCOA")
 
 ## ---- message=FALSE, warning=FALSE-----------------------------------------
 # sample_data(ps)$human <- factor(get_variable(ps, "SampleType") %in% c("Feces", "Mock", "Skin", "Tongue"))
