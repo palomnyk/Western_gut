@@ -34,11 +34,13 @@ library("phyloseq")
 home_dir = file.path('~','git','Western_gut')
 #home_dir = file.path('cloud','project')
 output_dir = file.path(home_dir, 'output')
-project = "RDP Western Gut"
+project = "philr_western_gut"
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 # list.files(f_path)
 
 setwd(file.path(home_dir))
+
+print("Established directory layout")
 
 
 ##---------------------Import R objects-----------------------------##
@@ -51,13 +53,14 @@ alignment <- readRDS(con)
 con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2_taxonomy.rds"))
 taxTab <- readRDS(con)
 
+print("Imported R objects")
 
 ##------------------------Build tree--------------------------------##
 phangAlign <- phyDat(as(alignment, "matrix"), type="DNA")
-dm <- dist.ml(phangAlign)
-treeNJ <- upgma(dm) # Note, tip order != sequence order
-fit = pml(treeNJ, data=phangAlign)
-fitGTR <- update(fit, k=4, inv=0.2)
+dm <- dist.ml(phangAlign)#create distance matrix
+treeNJ <- upgma(dm) #make tree
+fit = pml(treeNJ, data=phangAlign)#fit model
+fitGTR <- update(fit, k=4, inv=0.2)#fit model with updated parameters
 fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
                     rearrangement = "stochastic", control = pml.control(trace = 0))
 print("phangorn completed")
@@ -78,11 +81,14 @@ print("Created ps")
 
 #examine tree
 library("ape")
+
+pdf(paste0(project,"_2", ".pdf"))
+
 plot_tree(ps, "treeonly", nodeplotblank, ladderize="left")
 
 plot_tree(ps, ladderize="left", color="Religion")
 
-plot_tree(ps, ladderize="left", color="Religion", label.tips="taxa_names")
+dev.off()
 
 
 # setwd(file.path(home_dir, "philr_pipelines"))
