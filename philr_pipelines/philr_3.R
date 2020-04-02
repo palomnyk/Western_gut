@@ -83,14 +83,23 @@ ps.pcoa <- ordinate(ps, 'PCoA', distance=ps.dist)
 catagoriesString = "Recruitment.Date	Sample.Date	Recruitment.Location	Researcher	Sub.Study	Sample.Month	Birth.Year	Age	Public.Housing	Medical.Assistance	Children.Free.Lunch	Highest.Education	Ethnicity	Religion	Birth.Location	Type.Birth.Location	Arrival.in.US	Years.in.US	Location.before.US	Type.location.before.US	Years.lived.in.Location.before.US	Tobacco.Use	Alcohol.Use	Height	Weight	Waist	BMI	BMI.Class	Medications	Breastfed	Years.Breastfed	Notes.Participants	Age.at.Arrival	Weight.M6	BMI.M6	Waist.M6	Measurement.Date.M6	Sample.Order	Sample.Group	Waist.Height.Ratio"
 catagoriesString = unlist(strsplit(catagoriesString, split = "\t"))
 
-setwd(output_dir)
+print(catagoriesString)
 
-pdf(paste0("philr_PCOA", ".pdf"))
+setwd(file.path(output_dir, "philr_pcoa"))
+
+# pdf("philr_PCOA_alcohol.pdf")
+# plot_ordination(ps, ps.pcoa, color="Alcohol.Use")
+# dev.off()
+
+library("ggplot2")
+
 for (catag in catagoriesString){
   print(catag)
-  plot_ordination(ps, ps.pcoa, color=trimws(catag))
+  catag = trimws(catag)
+  myTitle = paste("philr_PCOA_", catag, ".pdf", sep = "")
+  plt = plot_ordination(ps, ps.pcoa, color=catag)
+  ggsave(plt, filename = myTitle)
 }
-dev.off()
 
 print("done with PCOA")
 
@@ -138,7 +147,6 @@ annotate_balance(tree, 'n730', p=p, labels = c('n730+', 'n730-'),
 ps.philr.long <- convert_to_long(ps.philr, get_variable(ps, 'human')) %>%
   filter(coord %in% top.coords)
 
-library("ggplot2")
 library("gridExtra")
 
 ggplot(ps.philr.long, aes(x=labels, y=value)) +
@@ -158,3 +166,4 @@ ps.philr.long %>%
   geom_point(size=4) +
   xlab(tc.names['n16']) + ylab(tc.names['n730']) +
   theme_bw()
+
