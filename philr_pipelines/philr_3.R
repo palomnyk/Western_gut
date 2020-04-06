@@ -87,11 +87,13 @@ print(catagoriesString)
 
 setwd(file.path(output_dir, "philr_pcoa"))
 
-# pdf("philr_PCOA_alcohol.pdf")
-# plot_ordination(ps, ps.pcoa, color="Alcohol.Use")
-# dev.off()
-
 library("ggplot2")
+
+theme_set(theme_classic())
+
+myTitle = paste("philr_PCOA_", "ethn", ".pdf", sep = "")
+plt = plot_ordination(ps, ps.pcoa, color="Sample.Group")
+ggsave(plt, filename = myTitle)
 
 for (catag in catagoriesString){
   print(catag)
