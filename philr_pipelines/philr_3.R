@@ -100,11 +100,12 @@ mimicCols1 = c(Control = "gray", "red", "yellow", "purple", "seashell", "seashel
 
 myTitle = paste("philr_PCOA_", "ethn", ".pdf", sep = "")
 
-plt = plot_ordination(ps, ps.pcoa, color="Sample.Group", shape="Sample.Group") +
+plt = plot_ordination(ps, ps.pcoa, color="Sample.Group", shape="Sample.Group") + 
   scale_colour_manual(values=mimicCols) + 
   scale_shape_manual(values = c(17, 1, 17, 16, 1, 16)) +
-  stat_ellipse(show.legend=F, type="t", level=.6)
-
+  stat_ellipse(show.legend=F, type="t", level=.6) +
+  scale_x_reverse() + 
+  geom_point(size=3)
 ggsave(plt, filename = myTitle)
 
 
