@@ -91,17 +91,30 @@ library("ggplot2")
 
 theme_set(theme_classic())
 
+#Shapes
+mimicShapes = c(17, 17, 1, 1, 16, 16)
+
+#Colors
+mimicCols = c("gray", "maroon2", "palevioletred1", "deeppink2", "seagreen4", "seagreen4")
+mimicCols1 = c(Control = "gray", "red", "yellow", "purple", "seashell", "seashell")
+
 myTitle = paste("philr_PCOA_", "ethn", ".pdf", sep = "")
-plt = plot_ordination(ps, ps.pcoa, color="Sample.Group")
+
+plt = plot_ordination(ps, ps.pcoa, color="Sample.Group", shape="Sample.Group") +
+  scale_colour_manual(values=mimicCols) + 
+  scale_shape_manual(values = c(17, 1, 17, 16, 1, 16)) +
+  stat_ellipse(show.legend=F, type="t", level=.6)
+
 ggsave(plt, filename = myTitle)
 
-for (catag in catagoriesString){
-  print(catag)
-  catag = trimws(catag)
-  myTitle = paste("philr_PCOA_", catag, ".pdf", sep = "")
-  plt = plot_ordination(ps, ps.pcoa, color=catag)
-  ggsave(plt, filename = myTitle)
-}
+
+# for (catag in catagoriesString){
+#   print(catag)
+#   catag = trimws(catag)
+#   myTitle = paste("philr_PCOA_", catag, ".pdf", sep = "")
+#   plt = plot_ordination(ps, ps.pcoa, color=catag)
+#   ggsave(plt, filename = myTitle)
+# }
 
 print("done with PCOA")
 
