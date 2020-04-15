@@ -3,6 +3,11 @@ require(reshape2)
 require(plyr)
 require(ggplot2)
 require(cowplot)
+# install.packages('ggbeeswarm')
+library(ggbeeswarm)
+library(ggplot2)
+
+source(file.path(home_dir, "philr_pipelines", "utils.r"))
 
 plot.b.p.ratio.x.bmi <- function(map0, otu, bug1, bug2, outputfn=NULL)
 {        
@@ -316,7 +321,7 @@ plot.b.p.ratio.all.boxplots <- function(map0, otu0, bug1, bug2, outputfn)
 #             theme(plot.margin = unit(c(0, 0, 0, 0), "cm"), axis.text = element_text(size=10), axis.title.y = element_text(size=12)) + scale_x_discrete(labels=SAMPLE.GROUP.NAMES.SHORT)
     
     p <- map.boxplot(y=d$y, Group=d$Sample.Group, main="", facet.var=NULL, alpha=.1, add.pval=TRUE, plot.legend.only=FALSE, ylab="log10(B/P)", strip.text.size=5, y.size=10, 
-                            x.size=9, show.x=TRUE, group.vars.df=d[,c("Resident.Continent","Birth.Continent","Ethnicity")])
+                            x.size=9, show.x=TRUE, group.vars.df=d[,c("Ethnicity")])
 
     
     save_plot(outputfn, p, useDingbats=FALSE, base_aspect_ratio = 1)

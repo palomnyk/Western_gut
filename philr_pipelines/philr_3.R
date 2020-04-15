@@ -116,6 +116,10 @@ print("done with PCOA")
 ##----------------------------Boxplots------------------------------##
 source(file.path('~','git', "Western_gut", "philr_pipelines", "b.p.ratio.r"))
 
+tax_names = row.names(otu.table)
+
+
+
 bacteroides <- "k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides"
 prevotella <- "k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Prevotellaceae;g__Prevotella"
 

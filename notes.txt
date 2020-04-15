@@ -9,4 +9,6 @@ IMP.267
 
 scp amyerke@hpc.uncc.edu:~/git/Western_gut/philr_pipelines/errF.pdf ~/git/Western_gut/output/errF.pdf
 
-conda create -n philr_env r-base=3.6 anaconda
+conda create -n philr_env r-base=3.6 anacondai
+
+for existing trees:  Silva LTP tree (e.g. pplacer and others

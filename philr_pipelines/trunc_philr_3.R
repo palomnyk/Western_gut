@@ -37,9 +37,17 @@ project = "RDP Western Gut"
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 setwd(file.path(home_dir))
 
-##---------------------Import R objects-----------------------------##
+##------------------Import R objects and data-----------------------##
 con <- gzfile(file.path( "philr_pipelines","phyloseq_obj.rds"))
 ps = readRDS(con)
+
+myMeta = read.table(file.path("fullMetadata.tsv"), 
+                    sep="\t", 
+                    header=TRUE, 
+                    row.names = "run_accession", 
+                    check.names = FALSE,
+                    stringsAsFactors=FALSE)
+
 
 ##------------------------philr munging-----------------------------##
 ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
@@ -117,33 +125,44 @@ print("done with PCOA")
 ##----------------------------Boxplots------------------------------##
 source(file.path(home_dir, "philr_pipelines", "b.p.ratio.r"))
 
-source(file.path(home_dir, "philr_pipelines", "b.p.ratio.r"))
-
 tax_names = row.names(otu.table)
 
-for(i in 1:length(tax)){
-  # print(tax[i])
-  q = tolower(tax[i][[6]])
-  # print(strsplit(as.character(tax[i]), " ")[2])
-  if (!is.na(q)){
-    if (q == "bacteroides"){
-      # b = strsplit(as.character(tax[i]), " ")[2]
-      print(tax[i])
-    }
-    if ( q == "prevotella" ) {
-      # p = strsplit(tax[i], " ")[1]
-      print(tax[i])
-    }
-  }
+myOtu = as.data.frame(otu_table(ps))
+myTax = na.omit(as.data.frame(tax_table(ps)))
 
+myOtu_names = row.names(myOtu)
+
+myOtu = myOtu[row.names(myOtu) %in% row.names(myMeta),]
+myMeta = myMeta[row.names(myMeta) %in% row.names(myOtu),]
+
+b_df = myTax[myTax[,"Genus"] == "Bacteroides",]
+p_df = myTax[myTax[,"Genus"] == "Prevotella",]
+
+b_names = row.names(b_df)
+p_names = row.names(p_df)
+
+b_vs_p = c()
+for ( i in 1:length(row.names(myOtu))){
+  b_val = sum(myOtu[i, b_names])
+  p_val = sum(myOtu[i, p_names])
+  # print(paste(b_val, p_val))
+  b_vs_p = c(b_vs_p, b_val/p_val)
 }
-print(b)
-print(p)
-b = "AGCAGCCGCGGTAATACGGAGGATGCGAGCGTTATCCGGATTTATTGGGTTTAAAGGGAGCGCAGACGGGACTTTAAGTCAGCTGTGAAATTTTCCGGCTCAACCGGGAAACTGCAGTTGATACTGGCGTCCTTGAGTACGGTCGAGGCAGGCGGAATTCGTGGTGTAGCGGTGAAATGCTTAGATATCACGAAGAACCCCGATTGCGAAGGCAGCCTGCCAGACCGCAACTGACGTTC"
-p = "AGCAGCCGCGGTAATACGGAAGGTCCGGGCGTTATCCGGATTTATTGGGTTTAAAGGGAGCGTAGGCCGTTTGTTAAGCGTGTTGTGAAATGTCGGGGCTCAACCTGGGCATTGCAGCGCGAACTGGCAGACTTGAGTGCGCGGGAAGTAGGCGGAATTCGTCGTGTAGCGGTGAAATGCTTAGATATGACGAAGAACTCCGATTGCGAAGGCAGCCTGCTGTAGCGTAACTGACGCTGA"
 
-bacteroides_tax <- "k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides"
-prevotella_tax <- "k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Prevotellaceae;g__Prevotella"
+plot(as.factor(myMeta[,"Sample.Group"]), b_vs_p)
+
+new_otu_names = vector(length = length(colnames(myOtu)))
+
+for (i in 1:length(colnames(myOtu))){
+  old_name = colnames(myOtu)[i]
+  new_otu_names[i] = as.character(myTax[old_name, "Genus"])
+}
+
+colnames(myOtu) = new_otu_names
+
+setwd(file.path(output_dir, "philr_pcoa"))
 
 #Note: map0 is metadata, otu0 is otutable
-plot.b.p.ratio.L(t(metadata, otu.table, b, p, "B/P_plot.pdf", num.clip.months=NULL, show.stats)
+# plot.b.p.ratio.all(myMeta, myOtu, "Bacteroides", "Prevotella", "BP_plot.pdf")
+
+plot.b.p.ratio.L(myMeta, myOtu, "Bacteroides", "Prevotella", "BP_Lplot.pdf")
