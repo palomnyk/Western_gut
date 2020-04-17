@@ -81,3 +81,5 @@ ps.philr <- philr(t(data.frame(otu.table)), tree,
                   part.weights='enorm.x.gm.counts', 
                   ilr.weights='blw.sqrt')
 #ps.philr[1:5,1:5]
+
+saveRDS(ps.philr, file.path("philr_pipelines", "philr_phyloseq_obj.rds"))
