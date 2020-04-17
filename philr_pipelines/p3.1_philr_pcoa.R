@@ -104,7 +104,7 @@ myTitle = paste("philr_PCOA_", "ethn", ".pdf", sep = "")
 
 plt = plot_ordination(ps, ps.pcoa, color="Sample.Group", shape="Sample.Group") + 
   scale_colour_manual(values=mimicCols) + 
-  scale_shape_manual(values = minicShapes) +
+  scale_shape_manual(values = mimicShapes) +
   stat_ellipse(show.legend=F, type="t", level=.6) +
   scale_x_reverse() + 
   geom_point(size=3)
@@ -164,11 +164,12 @@ for ( i in 1:length(row.names(myOtu))){
 #   ggtitle("B/P ratio")
 # save_plot(plot=p, fn, useDingbats=FALSE, base_aspect_ratio = 1.3 )
 
-plot(as.factor(myMeta[,"Sample.Group"]), log(b_vs_p), 
+plot(as.factor(myMeta[,"Sample.Group"]), log10(b_vs_p),
+     # log = 'y',
      xlab = "",
-     ylab = "B/P ratio", 
+     ylab = "log10(B/P ratio)", 
      main = "Westernized gut log(bacteriodes/prevolta ratio)")
-stripchart(as.factor(myMeta[,"Sample.Group"]) ~ log(b_vs_p), 
+stripchart(as.factor(myMeta[,"Sample.Group"]) ~ log10(b_vs_p), 
            vertical = TRUE, 
            method = "jitter",
            add = TRUE, 
