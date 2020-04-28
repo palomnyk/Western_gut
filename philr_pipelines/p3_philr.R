@@ -37,8 +37,9 @@ f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containi
 setwd(file.path(home_dir))
 
 ##------------------Import R objects and data-----------------------##
-con <- gzfile(file.path( "philr_pipelines","phyloseq_obj.rds"))
+con <- gzfile(file.path( "philr_pipelines", "r_objects", "phyloseq_obj.rds"))
 ps = readRDS(con)
+tps = readRDS(con)
 
 myMeta = read.table(file.path("fullMetadata.tsv"), 
                     sep="\t", 
@@ -51,9 +52,9 @@ myMeta = read.table(file.path("fullMetadata.tsv"),
 ##------------------------philr munging-----------------------------##
 ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
 ps <-  filter_taxa(ps, function(x) sd(x)/mean(x) > 3.0, TRUE)
+tps <- transform_sample_counts(ps, function(x) x+1)
 ps <- transform_sample_counts(ps, function(x) x+1)
 
-#ps
 ##------------------------Test for reqs-----------------------------##
 print("rooted tree?")
 is.rooted(phy_tree(ps)) # Is the tree Rooted?
@@ -72,14 +73,10 @@ metadata <- sample_data(ps)
 print("accessing taxanomic data")
 tax <- tax_table(ps)
 
-# otu.table[1:2,1:2] # OTU Table
-# tree # Phylogenetic Tree
-# head(tax,2) # taxonomy table
-
 ##---------------------philr transform------------------------------##
 ps.philr <- philr(t(data.frame(otu.table)), tree, 
                   part.weights='enorm.x.gm.counts', 
                   ilr.weights='blw.sqrt')
-#ps.philr[1:5,1:5]
 
-saveRDS(ps.philr, file.path("philr_pipelines", "philr_phyloseq_obj.rds"))
+saveRDS(ps, file.path("philr_pipelines", "r_objects", "ps_philr_transform.rds"))
+saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "philr_transform.rds"))

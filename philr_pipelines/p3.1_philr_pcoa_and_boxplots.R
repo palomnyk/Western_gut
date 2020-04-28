@@ -37,7 +37,7 @@ f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containi
 setwd(file.path(home_dir))
 
 ##------------------Import R objects and data-----------------------##
-con <- gzfile(file.path( "philr_pipelines", "r_objects", "phyloseq_obj.rds"))
+con <- gzfile(file.path( "philr_pipelines", "r_objects","phyloseq_obj.rds"))
 ps = readRDS(con)
 
 myMeta = read.table(file.path("fullMetadata.tsv"), 
@@ -53,7 +53,6 @@ ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
 ps <-  filter_taxa(ps, function(x) sd(x)/mean(x) > 3.0, TRUE)
 ps <- transform_sample_counts(ps, function(x) x+1)
 
-#ps
 ##------------------------Test for reqs-----------------------------##
 print("rooted tree?")
 is.rooted(phy_tree(ps)) # Is the tree Rooted?
@@ -82,6 +81,15 @@ ps.philr <- philr(t(data.frame(otu.table)), tree,
                   ilr.weights='blw.sqrt')
 #ps.philr[1:5,1:5]
 
+##---------------------PCOA transform and plots---------------------##
+ps.dist <- dist(ps.philr, method="euclidean")
+ps.pcoa <- ordinate(ps, 'PCoA', distance=ps.dist)
+
+catagoriesString = "Recruitment.Date	Sample.Date	Recruitment.Location	Researcher	Sub.Study	Sample.Month	Birth.Year	Age	Public.Housing	Medical.Assistance	Children.Free.Lunch	Highest.Education	Ethnicity	Religion	Birth.Location	Type.Birth.Location	Arrival.in.US	Years.in.US	Location.before.US	Type.location.before.US	Years.lived.in.Location.before.US	Tobacco.Use	Alcohol.Use	Height	Weight	Waist	BMI	BMI.Class	Medications	Breastfed	Years.Breastfed	Notes.Participants	Age.at.Arrival	Weight.M6	BMI.M6	Waist.M6	Measurement.Date.M6	Sample.Order	Sample.Group	Waist.Height.Ratio"
+catagoriesString = unlist(strsplit(catagoriesString, split = "\t"))
+
+setwd(file.path(output_dir, "philr_pcoa"))
+
 library("ggplot2")
 
 theme_set(theme_classic())
@@ -91,6 +99,26 @@ mimicShapes = c(17, 21, 17, 16, 21, 16)
 
 #Colors
 mimicCols = c("gray", "maroon2", "palevioletred1", "deeppink2", "seagreen4", "seagreen4")
+myTitle = paste("philr_PCOA_", "ethn", ".pdf", sep = "")
+
+plt = plot_ordination(ps, ps.pcoa, color="Sample.Group", shape="Sample.Group") + 
+  scale_colour_manual(values=mimicCols) + 
+  scale_shape_manual(values = mimicShapes) +
+  stat_ellipse(show.legend=F, type="t", level=.6) +
+  scale_x_reverse() + 
+  geom_point(size=3)
+ggsave(plt, filename = myTitle)
+
+#this code still works, just  commenting so it doesn't run every time I test this
+# for (catag in catagoriesString){
+#   print(catag)
+#   catag = trimws(catag)
+#   myTitle = paste("philr_PCOA_", catag, ".pdf", sep = "")
+#   plt = plot_ordination(ps, ps.pcoa, color=catag)
+#   ggsave(plt, filename = myTitle)
+# }
+
+print("done with PCOA")
 
 ##----------------------------Boxplots------------------------------##
 source(file.path(home_dir, "philr_pipelines", "import_code", "b.p.ratio.r"))
@@ -128,23 +156,17 @@ for ( i in 1:length(row.names(myOtu))){
 #   ggtitle("B/P ratio")
 # save_plot(plot=p, fn, useDingbats=FALSE, base_aspect_ratio = 1.3 )
 
-plot(log(b_vs_p) ~ factor(myMeta[,"Sample.Group"], 
-                levels = c("KarenThai", "HmongThai", "Karen1st", "Hmong1st", "Hmong2nd", "Control")),
+plot(as.factor(myMeta[,"Sample.Group"]), log10(b_vs_p),
+     # log = 'y',
      xlab = "",
-     names = c("KT", "HT", "K1",  "H1",  "H2",  "C" ),
-     ylab = "log(B/P ratio)", 
-     main = "Westernized gut log(bacteriodes/prevolta ratio)",
-     outline=FALSE,
-     )
-stripchart(log(b_vs_p) ~ factor(myMeta[,"Sample.Group"], 
-                levels = c("KarenThai", "HmongThai", "Karen1st", "Hmong1st", "Hmong2nd", "Control")),
+     ylab = "log10(B/P ratio)", 
+     main = "Westernized gut log(bacteriodes/prevolta ratio)")
+stripchart(as.factor(myMeta[,"Sample.Group"]) ~ log10(b_vs_p), 
            vertical = TRUE, 
            method = "jitter",
-           offset = 2,
-           add = TRUE, 
-           pch = c(16, 16, 21, 21, 17, 17), 
-           col = c("#018571", "#c51b7d", "#018571", "#c51b7d", "#c51b7d",  "gray")
-           )
+           add = TRUE,
+           pch = mimicShapes, 
+           col = mimicCols)
 
 new_otu_names = vector(length = length(colnames(myOtu)))
 

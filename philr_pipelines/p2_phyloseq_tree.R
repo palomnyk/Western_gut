@@ -19,12 +19,13 @@ rm(list = ls()) #clear workspace
 
 # ‘ape’, ‘dplyr’, ‘reshape2’, ‘plyr’
 # .cran_packages <- c("ggplot2", "gridExtra")
-if (!requireNamespace("BiocManager", quietly = TRUE))
+if (!requireNamespace("BiocManager", quietly = TRUE)){
   install.packages("BiocManager", type = "source", repos = "http://archive.linux.duke.edu/cran/")
-if (!requireNamespace("phangorn", quietly = TRUE))
-  install.packages("phangorn",type = "source", repos = "http://archive.linux.duke.edu/cran/")
-BiocManager::install("phyloseq")
-BiocManager::install("DECIPHER")
+  if (!requireNamespace("phangorn", quietly = TRUE))
+    install.packages("phangorn",type = "source", repos = "http://archive.linux.duke.edu/cran/")
+  BiocManager::install("phyloseq")
+  BiocManager::install("DECIPHER")
+}
 
 library("DECIPHER")
 library("phangorn")
@@ -44,13 +45,13 @@ print("Established directory layout")
 
 
 ##---------------------Import R objects-----------------------------##
-con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2.rds"))
+con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2.rds"))
 seqtab = readRDS(con)
 
-con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2_alignment.rds"))
+con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2_alignment.rds"))
 alignment <- readRDS(con)
 
-con <- gzfile(file.path( "philr_pipelines","ForwardReads_DADA2_taxonomy.rds"))
+con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2_taxonomy.rds"))
 taxTab <- readRDS(con)
 
 print("Imported R objects")
@@ -92,4 +93,4 @@ dev.off()
 
 
 # setwd(file.path(home_dir, "philr_pipelines"))
-saveRDS(ps, file.path("philr_pipelines", "phyloseq_obj.rds"))
+saveRDS(ps, file.path("philr_pipelines", "r_objects","phyloseq_obj.rds"))
