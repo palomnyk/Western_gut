@@ -69,6 +69,8 @@ mimicShapes = c(17, 21, 17, 16, 21, 16)
 
 #Colors
 mimicCols = c("gray", "maroon2", "palevioletred1", "deeppink2", "seagreen4", "seagreen4")
+# Levels: Control Hmong1st Hmong2nd HmongThai Karen1st KarenThai
+ellipsi_mimicCols = c("gray", "palevioletred1", "deeppink2", "seagreen4")
 myTitle = paste("philr_PCOA_", "ethn", ".pdf", sep = "")
 
 plt = plot_ordination(ps, ps.pcoa, color="Sample.Group", shape="Sample.Group") + 
@@ -90,3 +92,54 @@ ggsave(plt, filename = myTitle)
 # }
 
 print("done with PCOA")
+
+library("vegan")
+
+#create PCA
+philr_prc = prcomp(ps.philr, 
+                   center = TRUE,
+                   scale = TRUE)
+
+#extract PCA matrix and convert to dataframe
+myPCA = data.frame(philr_prc$x)
+
+myMeta = data.frame(sample_data(ps))
+sa_gr = as.factor(myMeta[,"Sample.Group"])
+# Levels: Control Hmong1st Hmong2nd HmongThai Karen1st KarenThai
+#combine Hmong1st with Hmong2nd and Karen1st with KarenThai
+comb_sa_gr = sa_gr
+levels(comb_sa_gr) = c("Control", "Hmong1st", "Hmong1st", "HmongThai", "Karen1st", "Karen1st")
+            
+
+# plot_ordination
+
+ggplot(myPCA) +
+  scale_colour_manual(values=mimicCols) +
+  scale_shape_manual(values = mimicShapes) +
+  stat_ellipse(show.legend=F, type="t", 
+               level=.6,
+               inherit.aes = F,
+               aes(PC1,
+                   PC2,
+                   color = comb_sa_gr,
+                   # group = comb_sa_gr
+                   )) +
+  # scale_x_reverse() + 
+  # scale_fill_discrete(name = "New Legend Title") +
+  geom_point(data = myPCA, size=3, show.legend=T,
+             # title = "Sample Group",
+             aes(PC1,PC2,
+                 col = sa_gr,
+                 shape = sa_gr
+                 ))
+# ggsave(plt, filename = "sample_group_vegan.pdf")
+# plt
+
+# ggplot(data=myPCA, aes(PC1, PC2)) + geom_point(aes(colour=Sample.Group, shape=Sample.Group, size=Sample.Group, alpha=Sample.Group)) +
+#   xlab(paste0("PC1 [",percent_var[1],"%]")) +
+#   ylab(paste0("PC2 [",percent_var[2],"%]")) + 
+#   scale_color_manual(name="Groups", values=cols) + #sets the color palette of the fill
+#   scale_alpha_manual(name="Groups", values=alphas) +
+#   scale_shape_manual(name="Groups", values=shapes) +
+#   scale_size_manual(name="Groups", values=sizes) + 
+#   stat_ellipse(data=d, aes(colour=Sample.Group), show.legend=F, type="t", level=.6)
