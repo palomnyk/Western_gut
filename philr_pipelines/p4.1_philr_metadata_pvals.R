@@ -27,7 +27,7 @@ ps.philr = data.frame(readRDS(con))
 con <- gzfile(file.path( "philr_pipelines", "r_objects","ps_philr_transform.rds"))
 ps = readRDS(con)
 
-metadata = data.frame(sample_data(ps))
+metadata = data.frame(ps@sam_data)
 metadata = metadata[, !apply(is.na(metadata), 2, all)]#remove columns where all are NA
 metadata[c(1:3)] <- list(NULL)
 drop = c("sample_accession","secondary_sample_accession","experiment_accession",             
@@ -38,12 +38,13 @@ drop = c("sample_accession","secondary_sample_accession","experiment_accession",
 metadata = metadata[ , !(names(metadata) %in% drop)]
 ##----------------------t-test w metadata----------------------------##
 
-
-pValues <-vector()
-philrColumns <- vector()
-metaNames <- vector()
-metaIndex <- vector()
-philrIndex <- vector()
+le = ncol(ps.philr) * ncol(metadata)
+pValues <-vector(length = le)
+philrColumns <- vector(length = le)
+metaNames <- vector(length = le)
+metaIndex <- vector(length = le)
+philrIndex <- vector(length = le)
+philrAnnot = vector(length = le)
 index <- 1
 
 for( m in 1:ncol(ps.philr))
@@ -61,11 +62,12 @@ for( m in 1:ncol(ps.philr))
     philrColumns[index] <- names(ps.philr)[m]
     metaIndex[index] <- p
     philrIndex[index] <- m
+    philrAnnot[index] = name.balance(ps@phy_tree, ps@tax_table, names(ps.philr)[m])
     index <- index + 1
   }
 }
 
-dFrame <- data.frame(pValues,philrColumns,philrIndex,metaNames,metaIndex,philrIndex)
+dFrame <- data.frame(pValues,philrColumns,philrIndex,metaNames,metaIndex,philrIndex, philrAnnot)
 
 dFrame <- dFrame [order(dFrame$pValues),]
 dFrame$pValuesAdjusted<- p.adjust( dFrame$pValues, method = "BH" )
@@ -79,10 +81,14 @@ for( i in 1:nrow(dFrame))
 {
   #print(i)
   #print(paste(dFrame$philrIndex[i], " ",  names(ps.philr)[dFrame$metaIndex[i]], " ", dFrame$pValuesAdjusted[i]))
-  aTitle <- paste(  names(metadata)[as.numeric(dFrame$philrIndex[i])], "vs",  names(ps.philr)[dFrame$metaIndex[i]], "\nAdjusted Pvalue=",
+  aTitle <- paste(  dFrame$philrColumns[i], "vs",  dFrame$metaNames[i], "\nAdjusted Pvalue=",
                     dFrame$pValuesAdjusted[i])
   
-  plot( ps.philr[,dFrame$philrIndex[i]] ~ as.factor(metadata[,dFrame$metaIndex[i]]),main=aTitle, xlab=paste(dFrame$philrIndex[i]), ylab=names(ps.philr)[dFrame$metaIndex[i]])
+  plot(ps.philr[,dFrame$philrIndex[i]] ~ as.factor(metadata[,dFrame$metaIndex[i]]), 
+       las =2,
+       main=aTitle, 
+       xlab=paste(dFrame$philrIndex[i]), 
+       ylab=names(ps.philr)[dFrame$metaIndex[i]])
 }
 
 dev.off()

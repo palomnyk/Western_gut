@@ -68,9 +68,9 @@ theme_set(theme_classic())
 mimicShapes = c(17, 21, 17, 16, 21, 16)
 
 #Colors
-mimicCols = c("gray", "maroon2", "palevioletred1", "deeppink2", "seagreen4", "seagreen4")
+mimicCols = c("gray", "maroon2", "palevioletred1", "red", "seagreen4", "seagreen4")
 # Levels: Control Hmong1st Hmong2nd HmongThai Karen1st KarenThai
-ellipsi_mimicCols = c("gray", "palevioletred1", "deeppink2", "seagreen4")
+ellipsi_mimicCols = c("gray", "palevioletred1", "red", "seagreen4")
 myTitle = paste("philr_PCOA_", "ethn", ".pdf", sep = "")
 
 plt = plot_ordination(ps, ps.pcoa, color="Sample.Group", shape="Sample.Group") + 

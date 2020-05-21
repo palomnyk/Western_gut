@@ -35,14 +35,12 @@ ps = readRDS(con)
 ##----------------------calculate ratios----------------------------##
 
 # sg = as.factor(ps@sam_data$Sample.Group)
+# sample_data(GP)$human <- factor(get_variable(GP, "SampleType") %in% c("Feces", "Mock", "Skin", "Tongue"))
 sample_data(ps)$gen2 <- factor(get_variable(ps, "Sample.Group") %in% c("Karen2nd", "Hmong2nd"))
 
 
 library(glmnet); packageVersion('glmnet')
 glmmod <- glmnet(ps.philr, sample_data(ps)$gen2, alpha=0.3, family="binomial")
-myT = t.test(ps.philr ~ sample_data(ps)$gen2)
-coefficients(myT)
-
 top.coords <- as.matrix(coefficients(glmmod, s=0.16))
 top.coords <- rownames(top.coords)[which(top.coords != 0)]
 (top.coords <- top.coords[2:length(top.coords)]) # remove the intercept as a coordinate
