@@ -43,7 +43,6 @@ setwd(file.path(home_dir))
 
 print("Established directory layout")
 
-
 ##---------------------Import R objects-----------------------------##
 con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2.rds"))
 seqtab = readRDS(con)
