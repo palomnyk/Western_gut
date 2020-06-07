@@ -20,22 +20,26 @@ if (exists(args[1])){
 
 fixedFasta = paste0("fixed_", oldFasta)
 
-processFile = function(filepath) {
-  con = file(filepath, "r")
-  while ( TRUE ) {
-    line = readLines(con, n = 1)
-    if ( length(line) == 0 ) {
-      break
-    }
-    # print(line)
-    if (grepl("_", line, fixed = TRUE)){
-      id = strsplit(line, "_")[[1]][1]
-      cat(paste0(id, "\n"), file = fixedFasta, append=TRUE)
-    } else{
-      cat(paste0(line, "\n"), file = fixedFasta, append=TRUE)
-    }
-  }
-  close(con)
-}
+fastaHeaders = vector()
 
-processFile(oldFasta)
+con = file(oldFasta, "r")
+while ( TRUE ) {
+  line = readLines(con, n = 1)
+  if ( length(line) == 0 ) {
+    break
+  }
+  # print(line)
+  if (grepl("_", line, fixed = TRUE)){
+    id = strsplit(line, "_")[[1]][1]
+    if (!id %in% fastaHeaders){
+      fastaHeaders = c(id, fastaHeaders)
+      cat(paste0(id, "\n"), file = fixedFasta, append=TRUE)
+    }else{
+      print(id)
+    }
+  } else{
+    cat(paste0(line, "\n"), file = fixedFasta, append=TRUE)
+  }
+}
+close(con)
+
