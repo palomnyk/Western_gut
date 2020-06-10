@@ -25,33 +25,32 @@ if (exists(args[1])){
   input_file = "output.txt"
 }
 
-output_file = paste0("parsed_", input_file)
-
-df <- data.frame(sseqid=character(),
-                 ppos=double(),
-                 len=integer(),
+df <- data.frame(qseqid=character(),
+                 sseqid=character(),
+                 bitscore=integer(),
                  stringsAsFactors=FALSE)
-tree_id = vector()
-seqs = vector()
-
 con = file(input_file, "r")
 while ( TRUE ) {
   line = readLines(con, n = 1)
   if ( length(line) == 0 ) {
     break
   }
-  result = strsplit(line)
-  print(paste(result[1],result[12],result[8],result[4]))
+  result = unlist(strsplit(line, '\t'))
+  # print(result)
+  #print(paste(result[1],result[12],result[8],result[4]))
   qseq = result[1]
-  sseq = result[2]
-  ppos = as.numeric(result[8])
-  len = as.integer(result[4])
-  print(paste(sseq, ppos, len))
-  if (! any(row.names(df) == qseq)){
-    df[qseq] = list(sseq, ppos, len)
+  sseq = unlist(strsplit(result[2],"\\|"))[2] #dbj|AB064923|
+  bitsc = as.integer(result[6])
+  # print(paste(sseq, bitsc))
+  if (! any(df[, "qseqid"] == qseq, na.rm = T)){
+    df[nrow(df) + 1,] = list(qseq, sseq, bitsc)
+  }else{
+    myInd = match(qseq, df[ ,"qseqid" ])
+    if (bitsc > df[myInd, "bitscore"]){
+      df[myInd,] = list(qseq, sseq, bitsc)
+    }
   }
-  
-  break
 }
 close(con)
 
+write.csv(df, file = "parsed_output.csv", sep = ",")
