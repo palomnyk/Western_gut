@@ -25,7 +25,7 @@ if (exists(args[1])){
   input_file = "output.txt"
 }
 
-df <- data.frame(qseqid=character(),
+df <- data.frame(#qseqid=character(),
                  sseqid=character(),
                  bitscore=integer(),
                  stringsAsFactors=FALSE)
@@ -36,20 +36,21 @@ while ( TRUE ) {
     break
   }
   result = unlist(strsplit(line, '\t'))
-  # print(result)
-  #print(paste(result[1],result[12],result[8],result[4]))
   qseq = result[1]
   sseq = unlist(strsplit(result[2],"\\|"))[2] #dbj|AB064923|
   bitsc = as.integer(result[6])
   # print(paste(sseq, bitsc))
-  if (! any(df[, "qseqid"] == qseq, na.rm = T)){
-    df[nrow(df) + 1,] = list(qseq, sseq, bitsc)
+  if (! qseq %in% row.names(df)){
+    newRow <- data.frame(sseqid=sseq,
+                         bitscore=bitsc) 
+    row.names(newRow) = qseq
+    df = rbind(df, newRow)
   }else{
-    myInd = match(qseq, df[ ,"qseqid" ])
-    if (bitsc > df[myInd, "bitscore"]){
-      df[myInd,] = list(qseq, sseq, bitsc)
+    if (bitsc > df[qseq, "bitscore"]){
+      df[qseq,] = list(sseq, bitsc)
     }
   }
+  # break
 }
 close(con)
 
