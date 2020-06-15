@@ -28,11 +28,21 @@ onlyOne = function(namedVector){
 }
 
 ##------------Import R objects and data preprocessing---------------##
-con <- gzfile(file.path( "philr_pipelines", "r_objects","philr_transform.rds"))
-ps.philr = data.frame(readRDS(con))
+# con <- gzfile(file.path( "philr_pipelines", "r_objects","philr_transform.rds"))
+# ps.philr = data.frame(readRDS(con))
+# close(con)
+# 
+# con <- gzfile(file.path( "philr_pipelines", "r_objects","ps_philr_transform.rds"))
+# ps = readRDS(con)
+# close(con)
 
-con <- gzfile(file.path( "philr_pipelines", "r_objects","ps_philr_transform.rds"))
+con <- gzfile(file.path( "philr_pipelines", "r_objects","ref_tree_philr_transform.rds"))
+ps.philr = data.frame(readRDS(con))
+close(con)
+
+con <- gzfile(file.path( "philr_pipelines", "r_objects","ref_tree_ps_philr_transform.rds"))
 ps = readRDS(con)
+close(con)
 
 metadata = data.frame(ps@sam_data)
 metadata = metadata[, !apply(is.na(metadata), 2, all)]#remove columns where all are NA
@@ -96,22 +106,24 @@ for( m in 1:ncol(ps.philr))
   }
 }
 
-print(philrColumns[index])
+print(philrColumns[index - 1])
 
 pValAdj <- p.adjust( pValues, method = "BH" )
 # dFrame <- data.frame(pValAdj,philrColumns,philrIndex,metaNames,metaIndex,philrIndex, philrAnnot, genus, family, order, class, phylum)
-dFrame <- data.frame(pValAdj,philrIndex,metaNames, genus, family, order, class, phylum)
-dFrame <- dFrame [order(dFrame$pValAdj),]
-write.table(dFrame, file=file.path(output_dir, "philrVmetadata_only_one.tsv"), row.names=FALSE, sep="\t")
+# dFrame <- data.frame(pValAdj,philrIndex,metaNames, genus, family, order, class, phylum)
+dFrame <- data.frame(pValAdj,philrIndex,metaNames,metaIndex,philrIndex, philrAnnot, genus)
 
-pdf(file.path(output_dir, "philrVmetadata.pdf"))
+dFrame <- dFrame [order(dFrame$pValAdj),]
+write.table(dFrame, file=file.path(output_dir, "ref_tree_philrVmetadata_only_one.tsv"), row.names=FALSE, sep="\t")
+
+pdf(file.path(output_dir, "ref_tree_philrVmetadata.pdf"))
 # par(mfrow=c(2,2))
 for( i in 1:nrow(dFrame))
 {
   #print(i)
   #print(paste(dFrame$philrIndex[index], " ",  names(ps.philr)[dFrame$metaIndex[i]], " ", dFrame$pValuesAdjusted[i]))
-  aTitle <- paste(  dFrame$philrColumns[i], "vs",  dFrame$metaNames[i], "\nAdjusted Pvalue=",
-                    dFrame$pValuesAdjusted[i])
+  aTitle <- paste( paste0("N", dFrame$philrIndex[i]), "vs",  dFrame$metaNames[i], "\nadj. pval:",
+                    round(dFrame$pValAdj[i], digits = 5))
   
   plot(ps.philr[,dFrame$philrIndex[i]] ~ as.factor(metadata[,dFrame$metaIndex[i]]), 
        las =2,
