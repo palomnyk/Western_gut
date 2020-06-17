@@ -36,19 +36,14 @@ output_dir = file.path(home_dir, 'output')
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 setwd(file.path(home_dir))
 
-##------------------Import R objects and data-----------------------##
-con <- gzfile(file.path( "philr_pipelines", "r_objects", "phyloseq_obj.rds"))
-ps = readRDS(con)
-
-# con <- gzfile(file.path( "philr_pipelines","phyloseq_obj.rds"))
-# ps = readRDS(con)
-
 ##------------Import R objects and data preprocessing----------------##
 con <- gzfile(file.path( "philr_pipelines", "r_objects","philr_transform.rds"))
 ps.philr = readRDS(con)
+close(con)
 
 con <- gzfile(file.path( "philr_pipelines", "r_objects","ps_philr_transform.rds"))
 ps = readRDS(con)
+close(con)
 
 
 ##---------------------PCOA transform and plots---------------------##

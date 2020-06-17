@@ -36,10 +36,15 @@ output_dir = file.path(home_dir, 'output')
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 setwd(file.path(home_dir))
 
+# ##------------------Import R objects and data-----------------------##
+# con <- gzfile(file.path( "philr_pipelines", "r_objects", "phyloseq_obj.rds"))
+# ps = readRDS(con)
+# close(con)
+
 ##------------------Import R objects and data-----------------------##
-con <- gzfile(file.path( "philr_pipelines", "r_objects", "phyloseq_obj.rds"))
+con <- gzfile(file.path( "philr_pipelines", "r_objects", "ref_tree_phyloseq_obj.rds"))
 ps = readRDS(con)
-tps = readRDS(con)
+close(con)
 
 myMeta = read.table(file.path("fullMetadata.tsv"), 
                     sep="\t", 
@@ -52,7 +57,6 @@ myMeta = read.table(file.path("fullMetadata.tsv"),
 ##------------------------philr munging-----------------------------##
 ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
 ps <-  filter_taxa(ps, function(x) sd(x)/mean(x) > 3.0, TRUE)
-tps <- transform_sample_counts(ps, function(x) x+1)
 ps <- transform_sample_counts(ps, function(x) x+1)
 
 ##------------------------Test for reqs-----------------------------##
@@ -78,5 +82,8 @@ ps.philr <- philr(t(data.frame(otu.table)), tree,
                   part.weights='enorm.x.gm.counts', 
                   ilr.weights='blw.sqrt')
 
-saveRDS(ps, file.path("philr_pipelines", "r_objects", "ps_philr_transform.rds"))
-saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "philr_transform.rds"))
+# saveRDS(ps, file.path("philr_pipelines", "r_objects", "ps_philr_transform.rds"))
+# saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "philr_transform.rds"))
+
+saveRDS(ps, file.path("philr_pipelines", "r_objects", "ref_tree_ps_philr_transform.rds"))
+saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "ref_tree_philr_transform.rds"))

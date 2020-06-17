@@ -46,12 +46,15 @@ print("Established directory layout")
 ##---------------------Import R objects-----------------------------##
 con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2.rds"))
 seqtab = readRDS(con)
+close(con)
 
 con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2_alignment.rds"))
 alignment <- readRDS(con)
+close(con)
 
 con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2_taxonomy.rds"))
 taxTab <- readRDS(con)
+close(con)
 
 print("Imported R objects")
 
@@ -89,7 +92,6 @@ plot_tree(ps, "treeonly", nodeplotblank, ladderize="left")
 plot_tree(ps, ladderize="left", color="Religion")
 
 dev.off()
-
 
 # setwd(file.path(home_dir, "philr_pipelines"))
 saveRDS(ps, file.path("philr_pipelines", "r_objects","phyloseq_obj.rds"))
