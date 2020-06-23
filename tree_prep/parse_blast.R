@@ -28,7 +28,11 @@ if (exists(args[1])){
 df <- data.frame(#qseqid=character(),
                  sseqid=character(),
                  bitscore=integer(),
+                 count_matched=integer(),
                  stringsAsFactors=FALSE)
+
+not_matched_ids = 1
+
 con = file(input_file, "r")
 while ( TRUE ) {
   line = readLines(con, n = 1)
@@ -38,20 +42,51 @@ while ( TRUE ) {
   result = unlist(strsplit(line, '\t'))
   qseq = result[1]
   sseq = unlist(strsplit(result[2],"\\|"))[2] #dbj|AB064923|
+  evalue = as.numeric(result[5])
   bitsc = as.integer(result[6])
   # print(paste(sseq, bitsc))
-  if (! qseq %in% row.names(df)){
-    newRow <- data.frame(sseqid=sseq,
-                         bitscore=bitsc) 
-    row.names(newRow) = qseq
-    df = rbind(df, newRow)
-  }else{
-    if (bitsc > df[qseq, "bitscore"]){
-      df[qseq,] = list(sseq, bitsc)
+  if (evalue < 10^-10){
+    if ( qseq %in% row.names(df)){
+      
+      if (bitsc > df[qseq, "bitscore"]){
+        count = df[qseq,count_matched]
+        df[qseq,] = list(sseq, bitsc, count + 1)
+      }
+      
+    }else{
+      newRow <- data.frame(sseqid=sseq,
+                           bitscore=bitsc,
+                           count_matched=1) 
+      row.names(newRow) = qseq
+      df = rbind(df, newRow)
     }
+
   }
+
   # break
 }
 close(con)
 
-write.csv(df, file = "parsed_output.csv", sep = ",")
+print(paste("original nrow:", nrow(df)))
+
+print(paste("number of unique rows:", length(unique(rownames(df)))))
+
+myT = table(df[,"sseqid"])
+
+print(paste("ave seq/node:", mean(myT), "\nmax seq/node:", max(myT)))
+
+hist(myT, breaks = 150, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
+barplot(myT, las = 2, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
+
+df = df[!duplicated(df),]
+
+print(paste("deduplicated nrow:", nrow(df)))
+
+myT = table(df[,"sseqid"])
+
+print(paste("ave seq/node:", mean(myT), "\nmax seq/node:", max(myT)))
+
+hist(myT, breaks = 150, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
+barplot(myT, las = 2, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
+
+write.csv(df, file = "parsed_output.csv")
