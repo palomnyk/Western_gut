@@ -78,15 +78,21 @@ print(paste("ave seq/node:", mean(myT), "\nmax seq/node:", max(myT)))
 hist(myT, breaks = 150, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
 barplot(myT, las = 2, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
 
-df = df[!duplicated(df),]
-
-print(paste("deduplicated nrow:", nrow(df)))
-
-myT = table(df[,"sseqid"])
-
-print(paste("ave seq/node:", mean(myT), "\nmax seq/node:", max(myT)))
-
-hist(myT, breaks = 150, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
-barplot(myT, las = 2, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
+# df = df[!duplicated(df),]
+# 
+# print(paste("deduplicated nrow:", nrow(df)))
+# 
+# myT = table(df[,"sseqid"])
+# 
+# print(paste("ave seq/node:", mean(myT), "\nmax seq/node:", max(myT)))
+# 
+# hist(myT, breaks = 150, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
+# barplot(myT, las = 2, xlab = "Sequences per node tip", main = "Histogram of seqs per node tip")
 
 write.csv(df, file = "parsed_output.csv")
+
+con <- gzfile(file.path( "philr_pipelines", "r_objects", "ForwardReads_DADA2_taxonomy.rds"))
+taxTab <- readRDS(con)
+close(con)
+
+print(nrow(taxTab))

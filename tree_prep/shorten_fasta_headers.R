@@ -1,4 +1,3 @@
-
 #!/usr/bin/env Rscript
 
 # makeblastdb was complaining about the length of the fasta headers
