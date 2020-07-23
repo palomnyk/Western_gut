@@ -26,9 +26,11 @@ setwd(file.path(home_dir))
 ##------------Import R objects and data preprocessing----------------##
 con <- gzfile(file.path( "philr_pipelines", "r_objects","philr_transform.rds"))
 ps.philr = readRDS(con)
+close(con)
 
 con <- gzfile(file.path( "philr_pipelines", "r_objects","ps_philr_transform.rds"))
 ps = readRDS(con)
+close(con)
 
 # tax = data.frame(tax_table(ps))
 
