@@ -42,15 +42,44 @@ tree_key = read.table(file.path(home_dir, "tree_prep", "parsed_output.csv"),
                       sep = ",",
                       row.names = 1,
                       header = T)
+match_df <- data.frame(
+                      seqs=character(),
+                      num_seqs=integer(),
+                      stringsAsFactors=FALSE)
+
 unmatched_ids = c()
+
+new_labels = c()
 
 for (i in 1:length(tree$tip.label)){
   old_lab = tree$tip.label[i]
   id = unlist(strsplit(old_lab, "_"))[1]
   if (id %in% tree_key$sseqid){
+    
     index = which(tree_key$sseqid == id)[1]
     new_lab = row.names(tree_key)[index]
     tree$tip.label[i] = new_lab
+    
+    if (id %in% row.names(match_df)){
+      print("in if")
+      seqs = match_df[id,"seqs"]
+      count = match_df[id,"num_seqs"]
+      new_seqs = paste(seqs, new_lab)
+      match_df[id,"seqs"] = new_seqs
+      match_df[id,"num_seqs"] = count + 1
+      
+    }else{
+    
+    
+    new_row = data.frame(
+      seqs=new_lab,
+      num_seqs=1,
+      stringsAsFactors=FALSE)
+    row.names(new_row) = c(id)
+    match_df = rbind(match_df, new_row)
+    }
+    
+    
 
   }else{
     unmatched_ids = c(unmatched_ids, id)
