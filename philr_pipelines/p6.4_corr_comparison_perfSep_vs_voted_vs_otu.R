@@ -62,6 +62,12 @@ uniq_otus = unique(otus)
 # 
 # pdf(file = file.path(output_dir, "philr_v_class", "philr_vs_Class_abs_abund_bact_prev.pdf"))
 
+# set up 
+nodes_vs_otu = read.table(text = "",
+                          colClasses = rep(x = "numeric", length(ps@phy_tree$node.label)),
+                          col.names = ps@phy_tree$node.label)
+
+nodes_status = c()
 
 for(otu1 in 1:length(uniq_otus)){
   

@@ -91,52 +91,52 @@ print(paste("sanity check order: ", all.equal(row.names(no), row.names(ps.philr)
 # hist(log(class_pb_ratio), breaks = 50)
 
 #absolute abundance with counts -hidden points
-rs = rowSums(ps@otu_table[])
-
-max_rs = max(rs)
-min_rs = min(rs)
-
-r_2 = c()
-percent_progress = c()
-
-percentage_step = 0.005
-step = (max_rs - min_rs) * percentage_step
-
-loop = 1
-
-# pdf(file = file.path(output_dir, "philr_vs_Class_all_abs_abund_bact_prev.pdf"))
-for (i in seq(min_rs, max_rs, by = step)){
-  print(i)
-  rm = rs > i
-  if(all(rm == F)){stop("all values false")}
-  
-  my_philr_rat = philr_pb_ratio[rm]
-  my_class_rat = class_pb_ratio[rm]
-  
-  my_lm = lm(my_philr_rat ~ log(my_class_rat ))
-  # if( is.na( summary(my_lm)$adj.r.squared )){stop("all values false")}
-  myCorr = cor.test( my_philr_rat, log(my_class_rat),
-                     method = "kendall")
-  r_2 = c(r_2, myCorr$p.value)
-  
-  # r_2 = c(r_2, summary(my_lm)$adj.r.squared)
-  percent_progress = c(percent_progress, loop * percentage_step)
-  
-  plot(my_philr_rat ~ log(my_class_rat),
-       main = paste0("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n",
-                     "Hiding b/p all abs abund < ", i, " of ", max_rs, 
-                     "\nadj_r^2: ", round(summary(my_lm)$adj.r.squared, 5)),
-       # col = rm,
-  )
-  loop = loop + 1
-}
-plot( percent_progress ~ r_2, 
-      main = paste(bact, "/", prev, "\n",
-                   "Max r^2:", round(max(r_2, na.rm = T), 5), 
-                   "at", percent_progress[match(max(r_2), r_2)][1],
-                   "of max abundance hidden"),
-)
-# dev.off()
+# rs = rowSums(ps@otu_table[])
+# 
+# max_rs = max(rs)
+# min_rs = min(rs)
+# 
+# r_2 = c()
+# percent_progress = c()
+# 
+# percentage_step = 0.005
+# step = (max_rs - min_rs) * percentage_step
+# 
+# loop = 1
+# 
+# # pdf(file = file.path(output_dir, "philr_vs_Class_all_abs_abund_bact_prev.pdf"))
+# for (i in seq(min_rs, max_rs, by = step)){
+#   print(i)
+#   rm = rs > i
+#   if(all(rm == F)){stop("all values false")}
+#   
+#   my_philr_rat = philr_pb_ratio[rm]
+#   my_class_rat = class_pb_ratio[rm]
+#   
+#   my_lm = lm(my_philr_rat ~ log(my_class_rat ))
+#   # if( is.na( summary(my_lm)$adj.r.squared )){stop("all values false")}
+#   my_corr = cor.test( my_philr_rat, log(my_class_rat),
+#                      method = "kendall")
+#   r_2 = c(r_2, my_corr$p.value)
+#   
+#   # r_2 = c(r_2, summary(my_lm)$adj.r.squared)
+#   percent_progress = c(percent_progress, loop * percentage_step)
+#   
+#   plot(my_philr_rat ~ log(my_class_rat),
+#        main = paste0("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n",
+#                      "Hiding b/p all abs abund < ", i, " of ", max_rs, 
+#                      "\nadj_r^2: ", round(summary(my_lm)$adj.r.squared, 5)),
+#        # col = rm,
+#   )
+#   loop = loop + 1
+# }
+# plot( percent_progress ~ r_2, 
+#       main = paste(bact, "/", prev, "\n",
+#                    "Max r^2:", round(max(r_2, na.rm = T), 5), 
+#                    "at", percent_progress[match(max(r_2), r_2)][1],
+#                    "of max abundance hidden"),
+# )
+# # dev.off()
 
 
 #looking only at only bact and prev
@@ -147,6 +147,7 @@ max_rs = max(rs)
 min_rs = min(rs)
 
 r_2 = c()
+cor_array = c()
 percent_progress = c()
 
 percentage_step = 0.01
@@ -154,66 +155,37 @@ step = (max_rs - min_rs) * percentage_step
 
 loop = 1
 
-pdf(file = file.path(output_dir, "philr_vs_Class_abs_abund_specific_bact_prev.pdf"))
+# pdf(file = file.path(output_dir, "philr_vs_Class_abs_abund_specific_bact_prev.pdf"))
 for (i in seq(min_rs, max_rs, by = step)){
-  print(i)
+  # print(i)
   rm = rs > i
   if(all(rm == F)){stop("all values false")}
-
+  
   my_philr_rat = philr_pb_ratio[rm]
   my_class_rat = class_pb_ratio[rm]
-
-  my_lm = lm(my_philr_rat ~ log(my_class_rat ))
   
-  myCorr = cor.test( my_philr_rat, log(my_class_rat),
+  my_lm = lm(my_philr_rat ~ log(my_class_rat ))
+  r_2 = c(r_2, summary(my_lm)$adj.r.squared)
+  
+  my_corr = cor.test( my_philr_rat, log(my_class_rat),
                      method = "kendall")
-  r_2 = c(r_2, myCorr$p.value)
-  # r_2 = c(r_2, summary(my_lm)$adj.r.squared)
-  percent_progress = c(percent_progress,loop * percentage_step)
+  cor_array = c(cor_array, my_corr$p.value)
+  
 
+  percent_progress = c(percent_progress,loop * percentage_step)
+  
   plot(my_philr_rat ~ log(my_class_rat),
-       main = paste0("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n",
-                     "Hiding specific b/p abs abund < ", i, " of ", max_rs, 
+       main = paste("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n",
+                     "Hiding specific b/p specific abs abund < ", i, " of ", max_rs,
                      "\nadj_r^2: ", round(summary(my_lm)$adj.r.squared, 5),
-                     "\nKendall corr: ", myCorr$p.value,
-                     ),
+                     "\nKendall corr: ", my_corr$p.value),
        # col = rm,
   )
   loop = loop + 1
 }
 plot( percent_progress ~ r_2, 
-     main = paste("Max r^2:", max(r_2), 
-                  "at", percent_progress[match(max(fr_2), r_2)][1] * 100, "percent of max abundance hidden"),
+      main = paste("Max r^2:", max(r_2), 
+                   "at", percent_progress[match(max(r_2), r_2)][1] * 100, "percent of max abundance hidden"),
 )
-dev.off()
+# dev.off()
 
-philr_mat = matrix(unlist(ps.philr))
-# View(table(philr_mat))
-# View(table(ps@otu_table))
-# View(table(no[, bact]))
-# View(table(ps.philr[,13]))
-# View(table(no[, prev]))
-
-
-#for making plot with lines hidden
-drops_class = no[targ_cols] == 1
-drops_philr = ps.philr[,"n13"] == -0.169192981810488
-
-drops_all = Reduce( "|", list(drops_class, drops_philr))
-
-plot( ps.philr[,"n13"] ~ log(class_pb_ratio),
-      main = paste("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae"
-                   )
-  )
-plot( ps.philr[,"n13"] ~ class_pb_ratio,
-      main = paste("Philr vs DADA2 Classifier bacteroidaceae/prevotellacea"
-                   )
-)
-plot( ps.philr[,"n13"][!drops_all] ~ log(class_pb_ratio[!drops_all]),
-      main = paste("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n", 
-                   "with pseudo count subtracted out")
-)
-plot( ps.philr[,"n13"][!drops_all] ~ class_pb_ratio[!drops_all],
-      main = paste("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n", 
-                   "with pseudo count subtracted out")
-)
