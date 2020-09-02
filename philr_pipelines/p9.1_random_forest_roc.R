@@ -56,6 +56,8 @@ resp_var_test = metadata$Sample.Group[test_index]
 # my_table = otu_tab
 my_table = cbind(otu_ratio, philr_trans)
 
+my_datasets = list(asv_table, otu_tab, philr_trans, cbind(otu_ratio, philr_trans), cbind(otu_tab, otu_ratio))
+
 my_table_train = my_table[train_index,]
 my_table_test = my_table[test_index,]
 ##--------------------------Build model ----------------------------##
@@ -63,33 +65,49 @@ rf <- randomForest(
   my_table_train, resp_var_train
 )
 ##-------------------------Test model------------------------------##
-true_pos = c(0)
-true_neg = c(0)
-for (grp in unique(resp_var_test)){
-  for (rw in 1:nrow(my_table_test)){
-    pred = predict(rf, newdata=my_table_test[rw,])
-    decision = pred == grp
-    truth = resp_var_test[rw] == grp
-    if (decision == truth & truth == T){
-      true_pos = c(true_pos, tail(true_pos)+1)
-      true_neg = c(true_neg, tail(true_neg))
-    }
-    else if (decision == truth & truth == F){
-      true_neg = c(true_neg, tail(true_neg)+1)
-      true_pos = c(true_pos, tail(true_pos))
-    }
-    else{
-      true_neg = c(true_neg, tail(true_neg))
-      true_pos = c(true_pos, tail(true_pos))
-    }
-    
-  }#for (rw in 1:nrow(my_table_test)){
-}
 
-true_neg = true_neg/max(true_neg)
-true_pos = true_pos/max(true_pos)
+roc_axes = function(groups = unique(resp_var_test),
+                    test_data, 
+                    true_resp = resp_var_test,
+                    ml_model = rf){
+  true_pos = c(0)
+  false_pos = c(0)
+  true_neg = c(0)
+  for (grp in groups){
+    for (rw in 1:nrow(test_data)){
+      pred = predict(ml_model, newdata=test_data[rw,])
+      decision = pred == grp
+      truth = true_resp[rw] == grp
+      if (decision == truth & truth == T){
+        true_pos = c(true_pos, tail(true_pos)+1)
+        true_neg = c(true_neg, tail(true_neg))
+        false_pos = c(false_pos, tail(false_pos))
+      }
+      else if (decision == truth & truth == F){
+        true_neg = c(true_neg, tail(true_neg)+1)
+        true_pos = c(true_pos, tail(true_pos))
+        false_pos = c(false_pos, tail(false_pos))
+      }
+      else{
+        true_neg = c(true_neg, tail(true_neg))
+        true_pos = c(true_pos, tail(true_pos))
+        false_pos = c(false_pos, tail(false_pos)+1)
+      }
+    }#for (rw in 1:nrow(test_data)){
+  }#for (grp in groups){
+  true_neg = true_neg/max(true_neg)
+  true_pos = true_pos/max(true_pos)
+  false_pos = false_pos/max(false_pos)
+  return(list(true_pos, false_pos))
+}#end roc_data
+my_t_roc = roc_axes(test_data = my_table_test,
+                    true_resp = resp_var_test,
+                    )
 
-plot(true_pos ~ true_neg,
-    type = "l")
+
+plot(my_t_roc[[1]] ~ my_t_roc[[2]],
+    type = "l",
+    xlab = "True positives",
+    ylab = "False positives")
 
 
