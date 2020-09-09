@@ -5,15 +5,6 @@
 rm(list = ls()) #clear workspace
 
 ##-------------------Load Depencencies------------------------------##
-if (!requireNamespace("BiocManager", quietly = TRUE)){
-  install.packages("BiocManager")
-  BiocManager::install("phyloseq")
-  BiocManager::install("philr")
-  BiocManager::install("ape")
-}
-library("phyloseq")
-library(philr); packageVersion("philr")
-library("reshape2")
 ##----------------Establish directory layout------------------------##
 home_dir = file.path('~','git','Western_gut')
 #home_dir = file.path('cloud','project')
@@ -29,13 +20,13 @@ close(con)
 otuRatios = data.frame(row.names = row.names(otu_tab))
 
 for ( rn in 1:nrow(otu_tab)){
-  ratios = vector(length = length(uniq_otus)^2 - length(uniq_otus))
+  ratios = vector(length = ncol(otu_tab)^2 - length(ncol(otu_tab)))
   index = 1
   for (cn1 in 1:ncol(otu_tab)){
     for (cn2 in 1:ncol(otu_tab)){
       if (cn2 != cn1){
         ratios[index] = otu_tab[rn, cn1] / otu_tab[rn, cn2]
-        names(ratios)[index] = paste0(colnames(otu_tab)[cn1], "/", colnames(otu_tab)[cn1])
+        names(ratios)[index] = paste0(colnames(otu_tab)[cn1], "/", colnames(otu_tab)[cn2])
         index = index + 1
       }# end if cn2 != cn1
     }#end cn2
