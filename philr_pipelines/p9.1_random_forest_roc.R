@@ -77,8 +77,7 @@ asv_table = read.table(file.path(home_dir, "philr_pipelines", "tables", "asv_tab
 
 metadata = read.table(file.path("philr_pipelines", "tables", "ps_sample_data.csv"), 
                     sep=",", 
-                    header=TRUE,
-                    stringsAsFactors = F)
+                    header=TRUE)
 drop = c("SampleID","Sample.Date", "Subject.ID","Old.Participant.ID","sample_accession",
          "secondary_sample_accession","experiment_accession",             
          "tax_id","scientific_name","instrument_model","library_layout",
@@ -94,6 +93,7 @@ for (c in 1:ncol(metadata)){
 }
 drop = unique(drop)
 metadata = metadata[ , !(names(metadata) %in% drop)]
+# lapply(metadata, class)
 
 ##-----------------Create training/testing sets---------------------##
 set.seed(36)
@@ -122,8 +122,9 @@ for(mta in 1:ncol(metadata)){
     print(paste(ds, mta))
     my_rocs[[ds]] = my_roc
   }#for ds
+  par(bg = 'grey96')
   plot(true_pos ~ false_pos,
-       data = as.data.frame(my_rocs[ds]),
+       data = as.data.frame(my_rocs[1]),
        type = "l",
        xlab = "False positives",
        ylab = "True positives",
@@ -138,13 +139,11 @@ for(mta in 1:ncol(metadata)){
   }
   abline(
     a = 0,
-    b = 1,
-  )
+    b = 1)
   legend('bottomright', 
          legend = my_ds_names, 
          col = palette(), 
          pch = 15,
-         cex=0.5
-  )
+         cex=0.5)
 }#for mta
 dev.off()
