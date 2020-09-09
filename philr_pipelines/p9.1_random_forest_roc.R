@@ -1,20 +1,19 @@
 # Author: Aaron Yerke
-# Script for ratio table of OTUS to 
+# Script for ROC of a all the spreadsheets
 # This was helepful: https://github.com/jsilve24/philr/blob/master/vignettes/philr-intro.Rmd#L142
 
 rm(list = ls()) #clear workspace
 
 ##-------------------Load Depencencies------------------------------##
-if (!requireNamespace("BiocManager", quietly = TRUE)){
-  install.packages("BiocManager")
-}
 if (!requireNamespace("randomForest", quietly = TRUE)){
   install.packages("randomForest")
 }
-if (!requireNamespace("pROC", quietly = TRUE)){
-  install.packages("pROC")
+if (!require("RColorBrewer")) {
+  install.packages("RColorBrewer")
 }
-library(pROC)
+library(RColorBrewer)
+#set color palette
+palette( brewer.pal(7,"Accent") )
 library(randomForest)
 ##----------------Establish directory layout------------------------##
 home_dir = file.path('~','git','Western_gut')
@@ -22,50 +21,7 @@ home_dir = file.path('~','git','Western_gut')
 output_dir = file.path(home_dir, 'output')
 setwd(file.path(home_dir))
 
-##------------Import tables    and data preprocessing---------------##
-otu_ratio = read.table(file.path(home_dir, "philr_pipelines", "tables", "otu_ratio_table.csv"),
-                        sep = ",",
-                        header = TRUE)
-
-philr_trans = read.table(file.path(home_dir, "philr_pipelines", "tables", "ref_tree_ps_philr_transform.csv"),
-                      sep = ",",
-                      header = TRUE)
-
-otu_tab = read.table(file.path(home_dir, "philr_pipelines", "tables", "otu_table.csv"),
-                     sep = ",",
-                     header = TRUE)
-
-asv_table = read.table(file.path(home_dir, "philr_pipelines", "tables", "asv_table.csv"),
-                       sep = ",",
-                       header = TRUE)
-
-metadata = read.table(file.path("philr_pipelines", "tables", "ps_sample_data.csv"), 
-                    sep=",", 
-                    header=TRUE)
-
-##-----------------Create training/testing sets---------------------##
-set.seed(36)
-train_index = sample(x = nrow(metadata), size = 0.75*nrow(metadata), replace=FALSE)
-test_index = c(1:nrow(metadata))[!(1:nrow(metadata) %in% train_index)]
-
-resp_var_train = metadata$Sample.Group[train_index]
-resp_var_test = metadata$Sample.Group[test_index]
-
-# my_table = cbind(otu_tab, otu_ratio)
-# my_table = asv_table
-# my_table = otu_tab
-my_table = cbind(otu_ratio, philr_trans)
-
-my_datasets = list(asv_table, otu_tab, philr_trans, cbind(otu_ratio, philr_trans), cbind(otu_tab, otu_ratio))
-
-my_table_train = my_table[train_index,]
-my_table_test = my_table[test_index,]
-##--------------------------Build model ----------------------------##
-rf <- randomForest(
-  my_table_train, resp_var_train
-)
-##-------------------------Test model------------------------------##
-
+##---------------------------Functions------------------------------##
 roc_axes = function(groups = unique(resp_var_test),
                     test_data, 
                     true_resp = resp_var_test,
@@ -95,19 +51,100 @@ roc_axes = function(groups = unique(resp_var_test),
       }
     }#for (rw in 1:nrow(test_data)){
   }#for (grp in groups){
+  print(paste("max(false_pos):", max(false_pos), "max(true_pos):", max(true_pos), "any na:", any(is.na(true_pos))))
   true_neg = true_neg/max(true_neg)
   true_pos = true_pos/max(true_pos)
   false_pos = false_pos/max(false_pos)
-  return(list(true_pos, false_pos))
+  return(data.frame(true_pos, false_pos))
 }#end roc_data
-my_t_roc = roc_axes(test_data = my_table_test,
-                    true_resp = resp_var_test,
-                    )
 
+##------------Import tables    and data preprocessing---------------##
+otu_ratio = read.table(file.path(home_dir, "philr_pipelines", "tables", "otu_ratio_table.csv"),
+                        sep = ",",
+                        header = TRUE)
 
-plot(my_t_roc[[1]] ~ my_t_roc[[2]],
-    type = "l",
-    xlab = "True positives",
-    ylab = "False positives")
+philr_trans = read.table(file.path(home_dir, "philr_pipelines", "tables", "ref_tree_ps_philr_transform.csv"),
+                      sep = ",",
+                      header = TRUE)
 
+otu_tab = read.table(file.path(home_dir, "philr_pipelines", "tables", "otu_table.csv"),
+                     sep = ",",
+                     header = TRUE)
 
+asv_table = read.table(file.path(home_dir, "philr_pipelines", "tables", "asv_table.csv"),
+                       sep = ",",
+                       header = TRUE)
+
+metadata = read.table(file.path("philr_pipelines", "tables", "ps_sample_data.csv"), 
+                    sep=",", 
+                    header=TRUE,
+                    stringsAsFactors = F)
+drop = c("SampleID","Sample.Date", "Subject.ID","Old.Participant.ID","sample_accession",
+         "secondary_sample_accession","experiment_accession",             
+         "tax_id","scientific_name","instrument_model","library_layout",
+         "experiment_title","sample_title", "study_title", "run_alias",
+         "fastq_ftp" ,"fastq_galaxy","submitted_ftp"                    
+         ,"submitted_galaxy","sra_ftp", "sra_galaxy", "study_accession",
+         "Notes.Samples", "Sub.Study", "Notes.Participants", "Birth.Year")
+metadata[metadata==""] <- NA
+for (c in 1:ncol(metadata)){
+  if (any(is.na(metadata[,c]))){
+    drop = c(drop, colnames(metadata)[c])
+  }
+}
+drop = unique(drop)
+metadata = metadata[ , !(names(metadata) %in% drop)]
+
+##-----------------Create training/testing sets---------------------##
+set.seed(36)
+train_index = sample(x = nrow(metadata), size = 0.75*nrow(metadata), replace=FALSE)
+test_index = c(1:nrow(metadata))[!(1:nrow(metadata) %in% train_index)]
+
+my_datasets = list(asv_table, otu_tab, otu_ratio, philr_trans, cbind(otu_ratio, philr_trans), cbind(otu_tab, otu_ratio))
+my_ds_names = c("ASV", "OTU", "OTU ratio", "philR", "OTU + philR", "OTU + OTU ratio")
+my_rocs = list()
+
+pdf(file = file.path(output_dir, "roc_all_metadata.pdf"))
+for(mta in 1:ncol(metadata)){
+  resp_var_test = metadata[,mta][test_index]
+  resp_var_train = metadata[,mta][train_index]
+  for( ds in 1:length(my_datasets)){
+    my_table = as.data.frame(my_datasets[ds])
+    my_table_train = my_table[train_index,]
+    my_table_test = my_table[test_index,]
+    
+    rf <- randomForest(
+      my_table_train, resp_var_train
+    )
+    my_roc = roc_axes(test_data = my_table_test,
+                           true_resp = resp_var_test
+    )
+    print(paste(ds, mta))
+    my_rocs[[ds]] = my_roc
+  }#for ds
+  plot(true_pos ~ false_pos,
+       data = as.data.frame(my_rocs[ds]),
+       type = "l",
+       xlab = "False positives",
+       ylab = "True positives",
+       col = palette()[1],
+       main = paste("ROC", colnames(metadata)[mta]),
+       ylim = c(0,1))
+  for(i in 2:length(my_ds_names)){
+    lines(true_pos ~ false_pos,
+          data = as.data.frame(my_rocs[i]),
+          col = palette()[i],
+          type = "l")
+  }
+  abline(
+    a = 0,
+    b = 1,
+  )
+  legend('bottomright', 
+         legend = my_ds_names, 
+         col = palette(), 
+         pch = 15,
+         cex=0.5
+  )
+}#for mta
+dev.off()
