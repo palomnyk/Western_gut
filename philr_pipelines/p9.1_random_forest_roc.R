@@ -25,15 +25,32 @@ setwd(file.path(home_dir))
 roc_axes = function(groups = unique(resp_var_test),
                     test_data, 
                     true_resp = resp_var_test,
-                    ml_model = rf){
+                    ml_model = rf,
+                    error_range = 0.10){
+  print(class(true_resp))
   true_pos = c(0)
   false_pos = c(0)
   true_neg = c(0)
+  # for categorical data
   for (grp in groups){
+    if (class(true_resp) %in% c("double", "integer")){
+      upper_lim_grp = grp + grp * error_range
+      lower_lim_grp = grp - grp * error_range
+    }
     for (rw in 1:nrow(test_data)){
-      pred = predict(ml_model, newdata=test_data[rw,])
-      decision = pred == grp
-      truth = true_resp[rw] == grp
+      #for when data are not categoric
+      if (class(true_resp) %in% c("double", "integer")){
+        pred = predict(ml_model, newdata=test_data[rw,])
+        upper_lim_tr = true_resp[rw] + true_resp[rw] * error_range
+        lower_lim_tr = true_resp[rw] - true_resp[rw] * error_range
+        decision = upper_lim_grp > pred & pred > lower_lim_grp
+        truth = upper_lim_tr > pred & pred > lower_lim_tr
+      }else{
+        #for catagoric data
+        pred = predict(ml_model, newdata=test_data[rw,])
+        decision = pred == grp
+        truth = true_resp[rw] == grp
+      }
       if (decision == truth & truth == T){
         true_pos = c(true_pos, tail(true_pos)+1)
         true_neg = c(true_neg, tail(true_neg))
@@ -52,9 +69,17 @@ roc_axes = function(groups = unique(resp_var_test),
     }#for (rw in 1:nrow(test_data)){
   }#for (grp in groups){
   print(paste("max(false_pos):", max(false_pos), "max(true_pos):", max(true_pos), "any na:", any(is.na(true_pos))))
-  true_neg = true_neg/max(true_neg)
-  true_pos = true_pos/max(true_pos)
-  false_pos = false_pos/max(false_pos)
+  
+  if( max(true_neg) != 0){
+    true_neg = true_neg/max(true_neg)
+  }
+  if( max(true_pos) != 0){
+    true_pos = true_pos/max(true_pos)
+  }
+  if( max(false_pos) != 0){
+    false_pos = false_pos/max(false_pos)
+  }
+  
   return(data.frame(true_pos, false_pos))
 }#end roc_data
 
