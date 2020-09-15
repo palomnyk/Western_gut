@@ -1,6 +1,6 @@
 # Author: Aaron Yerke
-# Script for ratio table of OTUS to 
-# This was helepful: https://github.com/jsilve24/philr/blob/master/vignettes/philr-intro.Rmd#L142
+# Script for ROC of single spreadsheet at a time
+# This was helpful: https://github.com/jsilve24/philr/blob/master/vignettes/philr-intro.Rmd#L142
 
 rm(list = ls()) #clear workspace
 
@@ -69,3 +69,4 @@ heatmap(cm,
         Rowv = FALSE,
         keep.dendro = FALSE,
         verbose = TRUE)
+
