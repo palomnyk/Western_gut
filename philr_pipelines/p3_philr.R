@@ -85,5 +85,17 @@ ps.philr <- philr(t(data.frame(otu.table)), tree,
 # saveRDS(ps, file.path("philr_pipelines", "r_objects", "ps_philr_transform.rds"))
 # saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "philr_transform.rds"))
 
-saveRDS(ps, file.path("philr_pipelines", "r_objects", "ref_tree_ps_philr_transform.rds"))
-saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "ref_tree_philr_transform.rds"))
+saveRDS(ps, 
+        file.path("philr_pipelines", "r_objects", "ref_tree_ps_philr_transform.rds"))
+
+write.table(ps.philr, 
+            file.path("philr_pipelines", "tables", "ref_tree_ps_philr_transform.csv"),
+            sep = ",")
+
+write.table(metadata, 
+            file.path("philr_pipelines", "tables", "ps_sample_data.csv"),
+            sep = ",")
+
+write.table(ps@otu_table, 
+            file.path("philr_pipelines", "tables", "asv_table.csv"),
+            sep = ",")
