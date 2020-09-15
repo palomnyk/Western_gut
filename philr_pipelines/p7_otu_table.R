@@ -8,12 +8,8 @@ rm(list = ls()) #clear workspace
 if (!requireNamespace("BiocManager", quietly = TRUE)){
   install.packages("BiocManager")
   BiocManager::install("phyloseq")
-  BiocManager::install("philr")
-  BiocManager::install("ape")
 }
 library("phyloseq")
-library(philr); packageVersion("philr")
-library("reshape2")
 ##----------------Establish directory layout------------------------##
 home_dir = file.path('~','git','Western_gut')
 #home_dir = file.path('cloud','project')
@@ -22,10 +18,6 @@ f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containi
 setwd(file.path(home_dir))
 
 ##------------Import R objects and data preprocessing---------------##
-con <- gzfile(file.path( "philr_pipelines", "r_objects","ref_tree_philr_transform.rds"))
-ps.philr = data.frame(readRDS(con))
-close(con)
-
 con <- gzfile(file.path( "philr_pipelines", "r_objects","ref_tree_ps_philr_transform.rds"))
 ps = readRDS(con)
 close(con)
