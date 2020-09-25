@@ -53,7 +53,6 @@ myMeta = read.table(file.path("fullMetadata.tsv"),
                     check.names = FALSE,
                     stringsAsFactors=FALSE)
 
-
 ##------------------------philr munging-----------------------------##
 ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
 ps <-  filter_taxa(ps, function(x) sd(x)/mean(x) > 3.0, TRUE)
@@ -70,32 +69,30 @@ phy_tree(ps) <- makeNodeLabel(phy_tree(ps), method="number", prefix='n')
 
 name.balance(phy_tree(ps), tax_table(ps), 'n1')
 
-otu.table <- t(otu_table(ps))
-tree <- phy_tree(ps)
-print("accessing sample data")
-metadata <- sample_data(ps)
-print("accessing taxanomic data")
-tax <- tax_table(ps)
-
 ##---------------------philr transform------------------------------##
-ps.philr <- philr(t(data.frame(otu.table)), tree, 
+ps.philr <- philr(ps@otu_table, ps@phy_tree, 
                   part.weights='enorm.x.gm.counts', 
                   ilr.weights='blw.sqrt')
 
-# saveRDS(ps, file.path("philr_pipelines", "r_objects", "ps_philr_transform.rds"))
-# saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "philr_transform.rds"))
-
-saveRDS(ps, 
-        file.path("philr_pipelines", "r_objects", "ref_tree_ps_philr_transform.rds"))
-
+# commented out to activate ref_tree_philr
+saveRDS(ps, file.path("philr_pipelines", "r_objects", "denovo_ps_philr_transform.rds"))
+saveRDS(ps.philr, file.path("philr_pipelines", "r_objects", "denovo_philr_transform.rds"))
 write.table(ps.philr, 
-            file.path("philr_pipelines", "tables", "ref_tree_ps_philr_transform.csv"),
+            file.path("philr_pipelines", "tables", "denovo_ps_philr_transform.csv"),
             sep = ",")
 
-write.table(metadata, 
-            file.path("philr_pipelines", "tables", "ps_sample_data.csv"),
-            sep = ",")
-
-write.table(ps@otu_table, 
-            file.path("philr_pipelines", "tables", "asv_table.csv"),
-            sep = ",")
+# commented out to activate denovo tree
+# saveRDS(ps, 
+#         file.path("philr_pipelines", "r_objects", "ref_tree_ps_philr_transform.rds"))
+# 
+# write.table(ps.philr, 
+#             file.path("philr_pipelines", "tables", "ref_tree_ps_philr_transform.csv"),
+#             sep = ",")
+# 
+# write.table(metadata, 
+#             file.path("philr_pipelines", "tables", "ps_sample_data.csv"),
+#             sep = ",")
+# 
+# write.table(ps@otu_table, 
+#             file.path("philr_pipelines", "tables", "asv_table.csv"),
+#             sep = ",")
