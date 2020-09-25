@@ -10,7 +10,7 @@ output_dir = file.path(home_dir, 'output')
 # setwd(file.path(home_dir))
 
 ##_Functions--------------------------------------------------------##
-equal_num_columns <- function(dfs, percent_abund = 0.70) {
+equal_num_columns_top_abund <- function(dfs, percent_abund = 0.70) {
   # dfs: list of dfs
   # percent_abund: minimun percent of non-zero cells in column
   # INTERNAL FUNCTIONS:
@@ -35,7 +35,5 @@ equal_num_columns <- function(dfs, percent_abund = 0.70) {
 
   return(dfs_top_x_abund)
 }
-
-
 
 
