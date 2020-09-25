@@ -36,4 +36,13 @@ equal_num_columns_top_abund <- function(dfs, percent_abund = 0.70) {
   return(dfs_top_x_abund)
 }
 
-
+philr_tutorial_normalization <- function(df) {
+  # The philr tutorial https://bioconductor.org/packages/release/bioc/vignettes/philr/inst/doc/philr-intro.R uses this block for normalizations: 
+  # ps <-  filter_taxa(ps, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
+  # ps <-  filter_taxa(ps, function(x) sd(x)/mean(x) > 3.0, TRUE)
+  # ps <- transform_sample_counts(ps, function(x) x+1)
+  df <- df[apply(df, 2, function(x) sum(x > 3) > (0.2*length(x)))]
+  df <-  df[apply(df, 2, function(x) sd(x)/mean(x) > 3.0)]
+  df <- df + 1
+  return(df)
+}
