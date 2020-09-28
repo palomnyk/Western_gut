@@ -59,18 +59,17 @@ votes[[c('down.votes', 'Family')]] # Denominator at Family Level
 tc.nn <- name.to.nn(ps@phy_tree, top.coords)
 tc.colors <- c('#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99')
 p <- ggtree(ps@phy_tree, layout='rectangular') +
-  geom_text(aes(label=node), hjust=-.3) +# geom_tiplab("genus") +
-  geom_balance(node=tc.nn[1], fill=tc.colors[1], alpha=0.6) +
-  geom_balance(node=tc.nn[2], fill=tc.colors[2], alpha=0.6) +
-  geom_balance(node=tc.nn[3], fill=tc.colors[3], alpha=0.6) +
-  geom_balance(node=tc.nn[4], fill=tc.colors[4], alpha=0.6) +
-  geom_balance(node=tc.nn[5], fill=tc.colors[5], alpha=0.6)
-p = annotate_balance(ps@phy_tree, top.coords[1], p=p, labels = c('n3+', 'n3-'),
-                      offset.text=0.15, bar=TRUE)
-p = annotate_balance(ps@phy_tree, 'n9', p=p, labels = c('n9+', 'n9-'),
-                 offset.text=0.1, bar=T)
+  geom_text(aes(label=node), hjust=-.3)# geom_tiplab("genus") +
+for (i in 1:length(tc.nn)){
+  p <- p + geom_balance(node=tc.nn[i], fill=tc.colors[i], alpha=0.6)
+  p <- annotate_balance(ps@phy_tree, top.coords[i], p=p, labels = c(paste0(tc.nn[i],'+'), paste0(tc.nn[i],'-')),
+                        offset.text=0.15, bar=TRUE)
+}
 p
-
+# p = annotate_balance(ps@phy_tree, top.coords[1], p=p, labels = c('n3+', 'n3-'),
+#                       offset.text=0.15, bar=TRUE)
+# p = annotate_balance(ps@phy_tree, 'n9', p=p, labels = c('n9+', 'n9-'),
+#                  offset.text=0.1, bar=TRUE)
 
 ps.philr.long <- convert_to_long(ps.philr, get_variable(ps, 'gen2')) %>%
   filter(coord %in% top.coords)
