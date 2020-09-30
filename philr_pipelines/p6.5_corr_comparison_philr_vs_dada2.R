@@ -1,5 +1,5 @@
 # Author: Aaron Yerke
-# Modified p4.1 to answer this question: Find nodes with perfect separation of any taxa at any level
+# Modified p6.4 to answer how OTUs compare to nodes with that OTU's name as highest voted branch
 # This was helepful: https://github.com/jsilve24/philr/blob/master/vignettes/philr-intro.Rmd#L142
 
 rm(list = ls()) #clear workspace
@@ -20,6 +20,14 @@ home_dir = file.path('~','git','Western_gut')
 output_dir = file.path(home_dir, 'output')
 f_path <- file.path(home_dir, "sequences") # CHANGE ME to the directory containing the fastq files after unzipping.
 setwd(file.path(home_dir))
+##-----------------------Functions----------------------------------##
+onlyOne = function(namedVector){
+  if(length(namedVector) == 1){
+    return(names(namedVector)[1])
+  }else {
+    return("---")
+  }
+}
 
 ##------------Import R objects and data preprocessing---------------##
 # con <- gzfile(file.path( "philr_pipelines", "r_objects","philr_transform.rds"))
@@ -40,17 +48,6 @@ close(con)
 
 # ps <- transform_sample_counts(ps, function(x) x+1)
 
-metadata = data.frame(ps@sam_data)
-metadata = metadata[, !apply(is.na(metadata), 2, all)]#remove columns where all are NA
-metadata[c(1:3)] <- list(NULL)
-drop = c("sample_accession","secondary_sample_accession","experiment_accession",             
-         "tax_id","scientific_name","instrument_model","library_layout",
-         "experiment_title","sample_title", "study_title", "run_alias",
-         "fastq_ftp" ,"fastq_galaxy","submitted_ftp"                    
-         ,"submitted_galaxy","sra_ftp", "sra_galaxy", "study_accession")
-metadata = metadata[ , !(names(metadata) %in% drop)]
-##----------------------t-test w metadata----------------------------##
-
 philr_pb_ratio = ps.philr[,"n13"]
 
 no = data.frame(ps@otu_table)
@@ -58,134 +55,68 @@ tax = data.frame(ps@tax_table)
 otus = vector(length = ncol(no), mode = "character")
 for (i in 1:ncol(no)){
   asv = names(no)[i]
-  otus[i] = tolower(as.character(tax[asv, 5]))
+  otus[i] = tolower(as.character(tax[asv, 5]))#this line sets the taxonomic level
 }
 
-##----------------------calculate ratios----------------------------##
-# bact = otus == "bacteroides"
-# bact = replace(bact, is.na(bact), F)
-# prev = otus == "prevotella"
-# prev = replace(prev, is.na(prev), F)
+uniq_otus = unique(otus)
 
-bact = otus == "bacteroidaceae"
-bact = replace(bact, is.na(bact), F)
-prev = otus == "prevotellaceae"
-prev = replace(prev, is.na(prev), F)
+# set up main data.frame (read.table allows for prenaming columns)
+nodes_vs_otu = read.table(text = "",
+                          colClasses = rep(x = "numeric", length(ps@phy_tree$node.label)),
+                          col.names = ps@phy_tree$node.label)
+# nodes_vs_otu = data.frame()
 
-class_pb_ratio= c(length = nrow(no))
-
-for (i in 1:nrow(no)){
-  class_pb_ratio[i] = sum(no[i, bact])/ sum(no[i, prev])
+perfect_sep = rep(T, ncol(ps.philr))# vector(length = ncol(ps.philr))#tells whether node is perfect sep or not
+node_vote_up = list()
+node_vote_down = list()
+for( m in 1:ncol(ps.philr)){
+  votes <- name.balance(ps@phy_tree, ps@tax_table, names(ps.philr)[m], return.votes = c('up', 'down'))
+  node_vote_up[m] = votes$up.votes$Genus
+  node_vote_down[m] = votes$down.votes$Genus
+  genus = paste0(onlyOne(votes$up.votes$Genus), "/", onlyOne(votes$down.votes$Genus))
+  if( grepl( "---", genus, fixed = T) ){
+    perfect_sep[[m]] = FALSE
+  }
 }
 
-print(paste("sanity check length:", length(class_pb_ratio) == length(philr_pb_ratio)))
-print(paste("sanity check order: ", all.equal(row.names(no), row.names(ps.philr) )))
-
-# hist(philr_pb_ratio, breaks = 50)
-# barplot(philr_pb_ratio, 1:length((philr_pb_ratio)), col = as.factor(metadata[,"Sample.Group"]))
-# 
-# hist(class_pb_ratio, breaks = 50)
-# 
-# hist(log(philr_pb_ratio), breaks = 50)
-# 
-# hist(log(class_pb_ratio), breaks = 50)
-
-#absolute abundance with counts -hidden points
-# rs = rowSums(ps@otu_table[])
-# 
-# max_rs = max(rs)
-# min_rs = min(rs)
-# 
-# r_2 = c()
-# percent_progress = c()
-# 
-# percentage_step = 0.005
-# step = (max_rs - min_rs) * percentage_step
-# 
-# loop = 1
-# 
-# # pdf(file = file.path(output_dir, "philr_vs_Class_all_abs_abund_bact_prev.pdf"))
-# for (i in seq(min_rs, max_rs, by = step)){
-#   print(i)
-#   rm = rs > i
-#   if(all(rm == F)){stop("all values false")}
-#   
-#   my_philr_rat = philr_pb_ratio[rm]
-#   my_class_rat = class_pb_ratio[rm]
-#   
-#   my_lm = lm(my_philr_rat ~ log(my_class_rat ))
-#   # if( is.na( summary(my_lm)$adj.r.squared )){stop("all values false")}
-#   my_corr = cor.test( my_philr_rat, log(my_class_rat),
-#                      method = "kendall")
-#   r_2 = c(r_2, my_corr$p.value)
-#   
-#   # r_2 = c(r_2, summary(my_lm)$adj.r.squared)
-#   percent_progress = c(percent_progress, loop * percentage_step)
-#   
-#   plot(my_philr_rat ~ log(my_class_rat),
-#        main = paste0("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n",
-#                      "Hiding b/p all abs abund < ", i, " of ", max_rs, 
-#                      "\nadj_r^2: ", round(summary(my_lm)$adj.r.squared, 5)),
-#        # col = rm,
-#   )
-#   loop = loop + 1
-# }
-# plot( percent_progress ~ r_2, 
-#       main = paste(bact, "/", prev, "\n",
-#                    "Max r^2:", round(max(r_2, na.rm = T), 5), 
-#                    "at", percent_progress[match(max(r_2), r_2)][1],
-#                    "of max abundance hidden"),
-# )
-# # dev.off()
-
-
-#looking only at only bact and prev
-targ_cols = Reduce( "|", list(prev, bact))
-rs = rowSums(ps@otu_table[targ_cols])
-
-max_rs = max(rs)
-min_rs = min(rs)
-
-r_2 = c()
-cor_array = c()
-percent_progress = c()
-
-percentage_step = 0.01
-step = (max_rs - min_rs) * percentage_step
-
-loop = 1
-
-# pdf(file = file.path(output_dir, "philr_vs_Class_abs_abund_specific_bact_prev.pdf"))
-for (i in seq(min_rs, max_rs, by = step)){
-  # print(i)
-  rm = rs > i
-  if(all(rm == F)){stop("all values false")}
+for(otu1 in 1:length(uniq_otus)){
+  my_otu = uniq_otus[otu1]
+  my_otus = otus == my_otu
+  my_otus = replace(my_otus, is.na(my_otus), F)
+  #need to add vectors so that they are the same length as nrow(ps.philr)
+  my_otus = as.data.frame(no[,my_otus])
+  my_otus = rowSums(my_otus, na.rm=T)
   
-  my_philr_rat = philr_pb_ratio[rm]
-  my_class_rat = class_pb_ratio[rm]
+  my_corrs = vector(length = ncol(ps.philr))
   
-  my_lm = lm(my_philr_rat ~ log(my_class_rat ))
-  r_2 = c(r_2, summary(my_lm)$adj.r.squared)
-  
-  my_corr = cor.test( my_philr_rat, log(my_class_rat),
-                     method = "kendall")
-  cor_array = c(cor_array, my_corr$p.value)
-  
+  for (node1 in 1:ncol(ps.philr)){
+    my_cor = cor(my_otus, unlist(ps.philr[,node1]), method = "kendall")
+    my_corrs[node1] = my_cor
+  }#end otu2 for loop
+  nodes_vs_otu[otu1,] = my_corrs
+}#end otu1 for loop
 
-  percent_progress = c(percent_progress,loop * percentage_step)
-  
-  plot(my_philr_rat ~ log(my_class_rat),
-       main = paste("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n",
-                     "Hiding specific b/p specific abs abund < ", i, " of ", max_rs,
-                     "\nadj_r^2: ", round(summary(my_lm)$adj.r.squared, 5),
-                     "\nKendall corr: ", my_corr$p.value),
-       # col = rm,
-  )
-  loop = loop + 1
-}
-plot( percent_progress ~ r_2, 
-      main = paste("Max r^2:", max(r_2), 
-                   "at", percent_progress[match(max(r_2), r_2)][1] * 100, "percent of max abundance hidden"),
+perf_df = nodes_vs_otu[,perfect_sep]
+nperf_df = nodes_vs_otu[,!perfect_sep]
+
+plot(perf_df, nperf_df,
+     main = "OTU vs philr node kendall correlations")
+# xlab = "perfect seperation nodes",
+# ylab = "mixed nodes")
+
+boxplot(unlist(as.vector(perf_df)) , unlist(as.vector(nperf_df)),
+        main = "Kendall for perfect seperation and non perfect seperation vs OTU\n t-test p-value = 0.00227", 
+        names = c("perfect sep", "blurry sep"), 
 )
-# dev.off()
+stripchart(unlist(as.vector(perf_df)), unlist(as.vector(nperf_df)), 
+           method = "jitter",
+           vertical=T, 
+           add = T)
+t.test(unlist(as.vector(perf_df)), unlist(as.vector(nperf_df)))
 
+
+
+
+mean(as.vector(perf_df))
+
+mean(nperf_df)
