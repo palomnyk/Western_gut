@@ -22,12 +22,14 @@ output_dir = file.path(home_dir, 'output')
 setwd(file.path(home_dir))
 
 ##---------------------------Functions------------------------------##
+# This function takes predictor variables (test_data) and tests it 
+# against the correct data (true_resp) and returns a dataframe of the 
+# true postives and true positives as ratios between 0 and 1
 roc_axes = function(groups = unique(resp_var_test),
                     test_data, 
                     true_resp = resp_var_test,
                     ml_model = rf,
                     error_range = 0.10){
-  print(class(true_resp))
   true_pos = c(0)
   false_pos = c(0)
   true_neg = c(0)
@@ -46,7 +48,7 @@ roc_axes = function(groups = unique(resp_var_test),
         decision = upper_lim_grp > pred & pred > lower_lim_grp
         truth = upper_lim_tr > pred & pred > lower_lim_tr
       }else{
-        #for catagoric data
+        #for categoric data
         pred = predict(ml_model, newdata=test_data[rw,])
         decision = pred == grp
         truth = true_resp[rw] == grp
@@ -120,13 +122,13 @@ drop = unique(drop)
 metadata = metadata[ , !(names(metadata) %in% drop)]
 # lapply(metadata, class)
 
+my_datasets = list(asv_table, otu_tab, otu_ratio, philr_trans, cbind(otu_ratio, philr_trans), cbind(otu_tab, otu_ratio))
+my_ds_names = c("ASV", "OTU", "OTU ratio", "philR", "OTU + philR", "OTU + OTU ratio")
+
 ##-----------------Create training/testing sets---------------------##
 set.seed(36)
 train_index = sample(x = nrow(metadata), size = 0.75*nrow(metadata), replace=FALSE)
 test_index = c(1:nrow(metadata))[!(1:nrow(metadata) %in% train_index)]
-
-my_datasets = list(asv_table, otu_tab, otu_ratio, philr_trans, cbind(otu_ratio, philr_trans), cbind(otu_tab, otu_ratio))
-my_ds_names = c("ASV", "OTU", "OTU ratio", "philR", "OTU + philR", "OTU + OTU ratio")
 my_rocs = list()
 
 pdf(file = file.path(output_dir, "roc_all_metadata.pdf"))
