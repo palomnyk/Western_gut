@@ -46,3 +46,21 @@ philr_tutorial_normalization <- function(df) {
   df <- df + 1
   return(df)
 }
+simplifiy_meta_western_gut <- function(meta_df) {
+  drop = c("SampleID","Sample.Date", "Subject.ID","Old.Participant.ID","sample_accession",
+           "secondary_sample_accession","experiment_accession",             
+           "tax_id","scientific_name","instrument_model","library_layout",
+           "experiment_title","sample_title", "study_title", "run_alias",
+           "fastq_ftp" ,"fastq_galaxy","submitted_ftp"                    
+           ,"submitted_galaxy","sra_ftp", "sra_galaxy", "study_accession",
+           "Notes.Samples", "Sub.Study", "Notes.Participants", "Birth.Year")
+  meta_df[meta_df==""] <- NA
+  for (c in 1:ncol(meta_df)){
+    if (any(is.na(meta_df[,c]))){
+      drop = c(drop, colnames(meta_df)[c])
+    }
+  }
+  drop = unique(drop)
+  meta_df = meta_df[ , !(names(meta_df) %in% drop)]
+  return(meta_df)
+}
