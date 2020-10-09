@@ -1,6 +1,9 @@
 # Author: Aaron Yerke
 # Compare the named nodes to named OTUs
 
+##-Load Dependencies------------------------------------------------##
+library(philr); packageVersion("philr")
+
 ##-Functions--------------------------------------------------------##
 philr_node_annot_anova_pval <- function(philr_df, phylo_obj, meta_df, only_one = TRUE) {
   # gives philr nodes phylogenetic taxonomy
@@ -140,37 +143,69 @@ philr_anova <- philr_node_annot_anova_pval(philr_df = philr_trans,
 otu_anova <- otu_anova_pval(otu_df = otu_tab,
                             meta_df = metadata)
 
-count = 0
+# how often are they the same?
+philr_same <- c()
+otu_same <- c()
+metad_same <- c()
+combine_same <- c()
 
+pdf(file = file.path(output_dir, "boxplots otu node comparison.pdf"))
 for (name1 in 1:nrow(otu_anova)){
   my_otu <- tolower(otu_anova$otuColumns[name1])
   for (name2 in 1:nrow(philr_anova)){
+    plot_this <- TRUE
     my_nodes <- as.character(philr_anova$family[name2])
     my_node_split <- unlist(strsplit(my_nodes, "/"))
     for (nm in my_node_split){
       nm = tolower(nm)
-      if (nm ==  my_otu &
-          otu_anova$metaNames[name1] == philr_anova$metaNames[name2] &
-          philr_anova$pValAdj[name2] < 0.05 &
-          philr_anova$pValAdj[name2] < 0.05
-          ){
-        
-        count = count + 1
-        # print(paste("name1:", name1, "nm: ", nm, "nms:", my_nodes[1], my_nodes[2]))
-        # for (met in 1:ncol(metadata)){
-        # 
-        # }
-        # metadata columns where my_otu is significant in otu_anova
-        # print(paste("my_otu:", my_otu, otu_anova$pValAdj[name1], otu_anova$metaNames[name1]))
-        # print(paste("my_nodes:", my_nodes, philr_anova$pValAdj[name2], philr_anova$metaNames[name2]))
-        
+      if (nm == my_otu &&
+          otu_anova$metaNames[name1] == philr_anova$metaNames[name2] &&
+          philr_anova$pValAdj[name2] < 0.05 &&
+          otu_anova$pValAdj[name1] < 0.05 &&
+          plot_this == TRUE){
+        metad = as.character(otu_anova$metaNames[name1])
+        philr_same <- c(philr_same, my_nodes)
+        otu_same <- c(otu_same, my_otu)
+        metad_same <- c(metad_same, metad)
+        combine_same <- c(combine_same, paste( my_otu, "|", my_nodes))
+        par(mfrow = c(1, 2))
+        par(cex = 0.6)
+        par(mar = c(6, 6, 4, 1), oma = c(1, 1, 1, 1))
+        aTitle <- paste( my_otu, "\nadj. pval:",
+                         round(otu_anova$pValAdj[name1], digits = 6))
+        plot(otu_tab[,my_otu] ~ as.factor(metadata[,metad]),
+             las =2,
+             main=aTitle,
+             xlab=metad,
+             ylab=paste(my_otu)
+        )
+        aTitle <- paste( my_nodes, "\nadj. pval:",
+                         round(philr_anova$pValAdj[name2], digits = 6))
+        plot(philr_trans[,philr_anova$philrIndex[name2]] ~ as.factor(metadata[,metad]),
+             las =2,
+             main=aTitle,
+             xlab=metad,
+             ylab=paste(my_nodes)
+        )
+        plot_this <- FALSE
       }
     }
   }
 }
+dev.off()
 
+pdf(file = file.path(output_dir, "histogram otu node comparison.pdf"))
+# plot(table(otu_same))
+# plot(table(philr_same))
+plot(table(metad_same),
+     main = "Metadata where OTU's and nodes\nboth adj pval < 0.05",
+     ylab = "frequency")
+par(mar = c(20, 6, 4, 1), oma = c(1, 1, 1, 1))
+plot(table(combine_same),
+     main = "OTUs and Nodes where\nadj pval < 0.05 on same metadata",
+     ylab = "frequency",
+     las = 2)
+dev.off()
 
-#nested apply function
-# apply(b, 2, function(x) apply(a, 2, function(y) summary(lm(x~y))$coefficients[2,4]))
 
 
