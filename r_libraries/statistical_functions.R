@@ -90,9 +90,9 @@ philr_node_annot_anova_pval <- function(philr_df, phylo_obj, meta_df, only_one =
   return(dFrame)
 }#end philr_node_annot_anova_pval
 
-otu_anova_pval <- function(df1, df2){
+otu_anova_pval <- function(otu_df, meta_df){
   #gives pvalues and adjusted pvalues of otus and metadata
-  le = ncol(df1) * ncol(df2)#number of rows in output df
+  le = ncol(otu_df) * ncol(meta_df)#number of rows in output df
   pValues <-vector(length = le)
   otuColumns <- vector(length = le)
   metaNames <- vector(length = le)
@@ -101,16 +101,15 @@ otu_anova_pval <- function(df1, df2){
   
   index <- 1
   
-  for( m in 1:ncol(df1))
+  for( m in 1:ncol(otu_df))
   {
-    for( p in 1:ncol(df2))
+    for( p in 1:ncol(meta_df))
     {
-      aLm <- lm( df1[,m] ~  df2[,p])
-      pValues[index]  <- 1
+      aLm <- lm( otu_df[,m] ~  meta_df[,p])
       
       try( pValues[index] <- anova(aLm)$"Pr(>F)"[1])
-      metaNames[index] <- names(df2)[p]
-      otuColumns[index] <- names(df1)[m]
+      metaNames[index] <- names(meta_df)[p]
+      otuColumns[index] <- names(otu_df)[m]
       metaIndex[index] <- p
       otuIndex[index] <- m
       index <- index + 1
@@ -126,10 +125,10 @@ kendall_corr <- function(df1, df2){
   #gives pvalues and adjusted pvalues of otus and metadata
   le = ncol(df1) * ncol(df2)#number of rows in output df
   pValues <-vector(length = le)
-  otuColumns <- vector(length = le)
-  metaNames <- vector(length = le)
-  metaIndex <- vector(length = le)
-  otuIndex <- vector(length = le)
+  df1_names <- vector(length = le)
+  df1_index <- vector(length = le)
+  df2_names <- vector(length = le)
+  df2_index <- vector(length = le)
   
   index <- 1
   
@@ -137,20 +136,20 @@ kendall_corr <- function(df1, df2){
   {
     for( p in 1:ncol(df2))
     {
-      aLm <- lm( df1[,m] ~  df2[,p])
-      pValues[index]  <- 1
+      a_corr <- cor.test( df1[,m], df2[,p],
+                          alternative = "two.sided",
+                          method = "kendall")
       
-      try( pValues[index] <- anova(aLm)$"Pr(>F)"[1])
-      metaNames[index] <- names(df2)[p]
-      otuColumns[index] <- names(df1)[m]
-      metaIndex[index] <- p
-      otuIndex[index] <- m
+      try( pValues[index] <- a_corr$p.value)
+      df2_names[index] <- names(df2)[p]
+      df1_names[index] <- names(df1)[m]
+      df2_index[index] <- p
+      df1_index[index] <- m
       index <- index + 1
     }
   }
   pValAdj <- p.adjust( pValues, method = "BH" )
-  dFrame <- data.frame(pValAdj,otuColumns,otuIndex,metaNames,metaIndex)
+  dFrame <- data.frame(pValAdj,pValues,df1_names,df1_index,df2_names,df2_index)
   dFrame <- dFrame [order(dFrame$pValAdj),]
   return(dFrame)
 }
-
