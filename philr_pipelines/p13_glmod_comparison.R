@@ -11,6 +11,10 @@ if (!requireNamespace("BiocManager", quietly = TRUE)){
   BiocManager::install("philr")
   BiocManager::install("ape")
 }
+if (!require("RColorBrewer")) {
+  install.packages("RColorBrewer")
+}
+library("RColorBrewer")
 library("phyloseq")
 library(philr); packageVersion("philr")
 library(ggtree); packageVersion("ggtree")
@@ -32,7 +36,6 @@ close(con)
 con <- gzfile(file.path( "philr_pipelines", "r_objects","ps_philr_transform.rds"))
 ps = readRDS(con)
 close(con)
-
 
 otu_ratio = read.table(file.path(home_dir, "philr_pipelines", "tables", "otu_ratio_table.csv"),
                        sep = ",",
@@ -80,13 +83,13 @@ for (n in names(coef)){
 
 top_coords <- top_coords[ rowSums(top_coords != 0) > 0, ]
 
-tc_names <- sapply(row.names(top_coords), function(x) name.balance(ps@phy_tree, ps@tax_table, x))
+tc_names <- sapply(row.names(top_coords), function(x) philr::name.balance(ps@phy_tree, ps@tax_table, x))
 
 # votes <- name.balance(ps@phy_tree, ps@tax_table, 'n2', return.votes = c('up', 'down'))
 # votes[[c('up.votes', 'Family')]] # Numerator at Family Level
 # votes[[c('down.votes', 'Family')]] # Denominator at Family Level
 
-tc.nn <- name.to.nn(ps@phy_tree, row.names(top_coords))
+tc.nn <- philr::name.to.nn(ps@phy_tree, row.names(top_coords))
 tc.colors <- c('#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', "#fb9a33", "#12a02c")
 
 my_colors <- c(rgb(0.99,0.1,0.1,0.2), 
@@ -96,25 +99,46 @@ my_colors <- c(rgb(0.99,0.1,0.1,0.2),
                rgb(0.1,0.5,0.6,0.2), 
                rgb(0.8,0.1,0.2,0.2))
 
-pdf(file = file.path(output_dir, "philr_tree_with_label.pdf"))
-p <- ggtree(ps@phy_tree, layout='rectangular') +
-  geom_text(aes(label= c(ps@phy_tree$tip.label, ps@phy_tree$node.label)), hjust=-.3)  # geom_tiplab("genus") +
-  # geom_nodelab(geom = "label" = row.names(top_coords))
-for (i1 in 1:nrow(top_coords)){
-  for (i2 in 1:ncol(top_coords)){
-    p <- p + geom_balance(node=tc.nn[i1],
-                          # color = "grey",
-                          fill = my_colors[i2],
-                          alpha=0.1)
-    p <- annotate_balance(ps@phy_tree,
-                          row.names(top_coords)[i1],
-                          p=p,
-                          labels = c(paste0(row.names(top_coords)[i1],'+'),
-                                     paste0(row.names(top_coords)[i1],'-')),
-                          # offset.text=0.15,
-                          bar=FALSE)
+
+my_col <- c("red", "green", "blue", "yellow")
+
+relevent_nodes <- c()
+
+for (n in ps@phy_tree$node.label){
+  if (n %in% row.names(top_coords)){
+    relevent_nodes <- c(relevent_nodes, n)
+  }else{
+    relevent_nodes <- c(relevent_nodes, "")
   }
 }
+
+relevent_nodes <- c(ps@phy_tree$tip.label, relevent_nodes)
+
+# set color palette
+palette( RColorBrewer::brewer.pal(as.integer(ncol(top_coords)),"Accent") )
+
+pdf(file = file.path(output_dir, "philr_tree_with_label.pdf"))
+p <- ggtree::ggtree(ps@phy_tree, layout='rectangular') # geom_tiplab("genus") + geom_nodelab(geom = "label" = row.names(top_coords))
+for (i1 in 1:nrow(top_coords)){#
+  print(row.names(top_coords)[i1])
+  for (i2 in 1:ncol(top_coords)){
+    if (top_coords[i1,i2] != 0){
+      print(palette()[i2])
+      p <- p + ggtree::geom_balance(node=tc.nn[i1],
+                                    color = "grey",
+                                    fill = palette()[i2],
+                                    alpha=0.1)
+      # p <- philr::annotate_balance(ps@phy_tree,
+      #                       row.names(top_coords)[i1],
+      #                       p=p,
+      #                       labels = c(paste0(row.names(top_coords)[i1],'+'),
+      #                                  paste0(row.names(top_coords)[i1],'-')),
+      #                       # offset.text=0.15,
+      #                       bar=FALSE)
+    }
+  }
+}
+p <- p + ggtree::geom_text(aes(label = relevent_nodes), hjust=-.3)
 p
 dev.off()
 
