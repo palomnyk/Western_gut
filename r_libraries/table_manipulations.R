@@ -11,6 +11,7 @@ output_dir = file.path(home_dir, 'output')
 
 ##_Functions--------------------------------------------------------##
 equal_num_columns_top_abund <- function(dfs, percent_abund = 0.70) {
+  # equalizes all dfs to least num col taking the columns with highest abundance
   # dfs: list of dfs
   # percent_abund: minimun percent of non-zero cells in column
   # INTERNAL FUNCTIONS:
@@ -63,4 +64,80 @@ simplifiy_meta_western_gut <- function(meta_df) {
   drop = unique(drop)
   meta_df = meta_df[ , !(names(meta_df) %in% drop)]
   return(meta_df)
+}
+
+philr_node_annot <- function(philr_df, phylo_obj, only_one = TRUE) {
+  # gives philr nodes phylogenetic taxonomy
+  # philr_df: a philr transformed df
+  # phylo_obj: a phyloseq object from which we will get the taxonmy and the phylogenetic tree for name.balance
+  # FUNCTION DEPENDENCIES:
+  if (!requireNamespace("BiocManager", quietly = TRUE)){
+    install.packages("BiocManager")
+    BiocManager::install("philr")
+  }
+  library(philr); packageVersion("philr")
+  # INTERNAL FUNCTIONS:
+  onlyOne = function(namedVector){
+    # internal function for finding annotations with only one option (meaning perfect seperation)
+    if(length(namedVector) == 1){
+      return(names(namedVector)[1])
+    }else {
+      return("---")
+    }
+  }
+  # MAIN METHOD OF FUNCTION
+  le = ncol(philr_df)
+  philrAnnot = vector(length = le)
+  phylum = vector(length = le)
+  class = vector(length = le)
+  order = vector(length = le)
+  family = vector(length = le)
+  genus = vector(length = le)
+  
+  for( m in 1:ncol(philr_df)){
+    votes <- name.balance(phylo_obj@phy_tree, phylo_obj@tax_table, names(philr_df)[m], return.votes = c('up', 'down'))
+    philrAnnot[m] = name.balance(ps@phy_tree, ps@tax_table, names(philr_df)[m])
+    if (only_one == TRUE){
+      genus[m] = paste0(onlyOne(votes$up.votes$Genus), "/", onlyOne(votes$down.votes$Genus))
+      family[m] = paste0(onlyOne(votes$up.votes$Family), "/", onlyOne(votes$down.votes$Family))
+      order[m] = paste0(onlyOne(votes$up.votes$Order), "/", onlyOne(votes$down.votes$Order))
+      class[m] = paste0(onlyOne(votes$up.votes$Class), "/", onlyOne(votes$down.votes$Class))
+      phylum[m] = paste0(onlyOne(votes$up.votes$Phylum), "/", onlyOne(votes$down.votes$Phylum))
+    }else{
+      genus[m] = paste0(names(which.max(votes$up.votes$Genus)), "/", names(which.max(votes$down.votes$Genus)))
+      family[m] = paste0(names(which.max(votes$up.votes$Family)), "/", names(which.max(votes$down.votes$Family)))
+      order[m] = paste0(names(which.max(votes$up.votes$Order)), "/", names(which.max(votes$down.votes$Order)))
+      class[m] = paste0(names(which.max(votes$up.votes$Class)), "/", names(which.max(votes$down.votes$Class)))
+      phylum[m] = paste0(names(which.max(votes$up.votes$Phylum)), "/", names(which.max(votes$down.votes$Phylum)))
+    }
+  }#end for( m in 1:ncol(philr_df)){
+  dFrame <- data.frame(philr_node = 1:le, node_names = names(philr_df), philrAnnot, genus, family, order, class, phylum)
+  detach(package:philr)
+  return(dFrame)
+}#end philr_node_annot
+
+simple_ratio_transform <- function(otu_df) {
+  # Function for making ratio table of OTUS for ml purposes
+  # The resulting table will look like: otu1/otu2, otu2/otu1
+  otuRatios = data.frame(row.names = row.names(otu_df))
+  for ( rn in 1:nrow(otu_df)){
+    ratios = vector(length = ncol(otu_df)^2 - ncol(otu_df))
+    index = 1
+    for (cn1 in 1:ncol(otu_df)){
+      for (cn2 in 1:ncol(otu_df)){
+        if (cn2 != cn1){
+          ratios[index] = otu_df[rn, cn1] / otu_df[rn, cn2]
+          names(ratios)[index] = paste0(colnames(otu_df)[cn1], "/", colnames(otu_df)[cn2])
+          index = index + 1
+        }# end if cn2 != cn1
+      }#end cn2
+    }#end cn1
+    ratioDf = t(data.frame(ratios))
+    colnames(ratioDf) = names(ratios)
+    row.names(ratioDf) = row.names(otu_df)[rn]
+    
+    otuRatios = rbind(otuRatios, ratioDf)
+    # otuRatios = rbind( otuRatios, ratios)
+  }
+  return(otuRatios)
 }
