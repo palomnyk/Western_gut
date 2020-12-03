@@ -42,6 +42,7 @@ tree_key = read.table(file.path(home_dir, "tree_prep", "parsed_output.csv"),
                       sep = ",",
                       row.names = 1,
                       header = T)
+
 match_df <- data.frame(
                       seqs=character(),
                       num_seqs=integer(),
@@ -104,4 +105,4 @@ ps <- phyloseq(otu_table(seqtab, taxa_are_rows=FALSE),
                phy_tree(tree)
 )
 
-saveRDS(ps, file.path(home_dir, "philr_pipelines", "r_objects","ref_tree_phyloseq_obj.rds"))
+# saveRDS(ps, file.path(home_dir, "philr_pipelines", "r_objects","ref_tree_phyloseq_obj.rds"))

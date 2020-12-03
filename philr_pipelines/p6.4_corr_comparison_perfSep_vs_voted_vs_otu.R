@@ -59,96 +59,60 @@ for (i in 1:ncol(no)){
 }
 
 uniq_otus = unique(otus)
-# 
-# pdf(file = file.path(output_dir, "philr_v_class", "philr_vs_Class_abs_abund_bact_prev.pdf"))
 
-# set up 
+# set up main data.frame (read.table allows for prenaming columns)
 nodes_vs_otu = read.table(text = "",
                           colClasses = rep(x = "numeric", length(ps@phy_tree$node.label)),
                           col.names = ps@phy_tree$node.label)
+# nodes_vs_otu = data.frame()
 
-nodes_status = c()
+perfect_sep = rep(T, ncol(ps.philr))# vector(length = ncol(ps.philr))#tells whether node is perfect sep or not
+for( m in 1:ncol(ps.philr)){
+  votes <- name.balance(ps@phy_tree, ps@tax_table, names(ps.philr)[m], return.votes = c('up', 'down'))
+  genus = paste0(onlyOne(votes$up.votes$Genus), "/", onlyOne(votes$down.votes$Genus))
+  if( grepl( "---", genus, fixed = T) ){
+    perfect_sep[[m]] = FALSE
+  }
+}
 
 for(otu1 in 1:length(uniq_otus)){
+  my_otu = uniq_otus[otu1]
+  my_otus = otus == my_otu
+  my_otus = replace(my_otus, is.na(my_otus), F)
+  #need to add vectors so that they are the same length as nrow(ps.philr)
+  my_otus = as.data.frame(no[,my_otus])
+  my_otus = rowSums(my_otus, na.rm=T)
   
-  other_otus = uniq_otus[-c(1:otu1)]
-  
-  if (length(other_otus) > 0){
-    my_otu = uniq_otus[otu1]
-    print(paste("otu1: ", my_otu))
+  my_corrs = vector(length = ncol(ps.philr))
     
-    my_otus1 = otus == my_otu
-    my_otus1 = replace(my_otus1, is.na(my_otus1), F)
-    
-    for (otu2 in 1:length(other_otus)){
-      print(length(other_otus))
-      other_otu = other_otus[otu2]
-      print(paste("otu2: ", other_otu))
-      my_otus2 = otus == other_otu
-      my_otus2 = replace(my_otus2, is.na(my_otus2), F)
-    
-      class_pb_ratio = c(length = nrow(no))
-      for (i in 1:nrow(no)){
-        class_pb_ratio[i] = sum(no[i, my_otus1])/ sum(no[i, my_otus2])
-      }
-      
-      # print(paste("sanity check length: length(class_pb_ratio) == length(philr_pb_ratio)"))
-      stopifnot(length(class_pb_ratio) == length(philr_pb_ratio), local = TRUE)
-      # print(paste("sanity check order:  all.equal(row.names(no), row.names(ps.philr) )"))
-      stopifnot(all.equal(row.names(no), row.names(ps.philr)), local = TRUE)
-      
-      
-      #looking only at only target bugs
-      targ_cols = Reduce( "|", list(my_otus1, my_otus2))
-      rs = rowSums(ps@otu_table[targ_cols])
-      
-      max_rs = max(rs)
-      min_rs = min(rs)
-      
-      r_2 = c()
-      percent_progress = c()
-      
-      percentage_step = 0.005
-      step = (max_rs - min_rs) * percentage_step
-      
-      loop = 1
-      
-      # pdf(file = file.path(output_dir, "philr_vs_Class_abs_abund_specific_bact_all_bact.pdf"))
-      for (i in seq(min_rs, max_rs, by = step)){
-        print( paste( "current i:", i))
-        rm = rs > i
-        if(all(rm == F)){
-          print("all values false")
-          break
-        }
-        my_philr_rat = philr_pb_ratio[rm]
-        my_class_rat = class_pb_ratio[rm]
-        
-        my_lm = lm(my_philr_rat ~ log(my_class_rat ))
-        if( is.na( summary(my_lm)$adj.r.squared )){
-          print("all values false")
-          break
-          }
-        r_2 = c(r_2, summary(my_lm)$adj.r.squared)
-        percent_progress = c(percent_progress,loop * percentage_step)
-        
-        # plot(my_philr_rat ~ log(my_class_rat),
-        #      main = paste0("Philr vs DADA2 Classifier bacteroidaceae/prevotellaceae\n",
-        #                    "Hiding specific b/p abs abund < ", i, " of ", max_rs, 
-        #                    "\nadj_r^2: ", round(summary(my_lm)$adj.r.squared, 5)),
-        #      # col = rm,
-        # )
-        loop = loop + 1
-      }#end loop through abund
-      print("end abund loop")
-      plot( percent_progress ~ r_2, 
-            main = paste(my_otu, "/", other_otu, "\n",
-                         "Max r^2:", max(r_2), 
-                         "at", percent_progress[match(max(r_2), r_2)][1] * 100, "percent of max abundance hidden"),
-      )
-      # dev.off()
-    }#end otu2 for loop
-  }#end if if (length(other_otus) > 0)
+  for (node1 in 1:ncol(ps.philr)){
+    my_cor = cor(my_otus, unlist(ps.philr[,node1]), method = "kendall")
+    my_corrs[node1] = my_cor
+  }#end otu2 for loop
+  nodes_vs_otu[otu1,] = my_corrs
 }#end otu1 for loop
 
+perf_df = nodes_vs_otu[,perfect_sep]
+nperf_df = nodes_vs_otu[,!perfect_sep]
 
+plot(perf_df, nperf_df,
+     main = "OTU vs philr node kendall correlations")
+     # xlab = "perfect seperation nodes",
+     # ylab = "mixed nodes")
+
+boxplot(unlist(as.vector(perf_df)) , unlist(as.vector(nperf_df)),
+        main = "Kendall for perfect seperation and non perfect seperation vs OTU\n t-test p-value = 0.00227", 
+        names = c("perfect sep", "blurry sep"), 
+        )
+stripchart(unlist(as.vector(perf_df)), unlist(as.vector(nperf_df)), 
+           method = "jitter",
+           vertical=T, 
+           add = T)
+t.test(unlist(as.vector(perf_df)), unlist(as.vector(nperf_df)))
+
+
+
+
+mean(as.vector(perf_df))
+
+mean(nperf_df)
